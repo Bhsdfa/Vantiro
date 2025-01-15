@@ -1,0 +1,13 @@
+' This file is responsable for giving properties to tiles.
+' This file's structure goes like this: (Tile ID), (Property), (Property), ...
+4, Fragile:5, Explosive:300
+5, Liquid, ChangePlayerHealth:-3, ChangePlayerSpeed:-5, Light:250
+6, Light:200
+19, Fragile:7
+32, Liquid
+33, Light:80
+34, Light:80
+35, Light:80
+36, Light:80
+37, Light:80
+38, Light:80
