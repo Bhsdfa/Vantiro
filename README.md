@@ -1,2 +1,2 @@
 # Vantiro
-2D Topdown zombie shooter
+A 2D topdown zombie shooter made in QB64pe
