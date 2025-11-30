@@ -12,4 +12,4 @@
 - Under the hood changes.
 
 
--# Warning: I didn't track these changes properly, since I stopped posting them.
+[^1] Warning: I didn't track these changes properly, since I stopped posting them.
