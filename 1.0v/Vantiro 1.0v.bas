@@ -1,0 +1,2803 @@
+Rem -=- Pensamento computacional -=-
+Rem Grupo: Alan, Josiel, Natan B. e Rafael
+Rem Data de criacao do arquivo: 27-Aug-24 (1:02 PM)
+Rem Softwares utilizados: TILED e QB64pe
+Rem TILED: https://www.mapeditor.org/    -=-    QB64pe: https://qb64phoenix.com/
+Rem Projeto escolar.bas:
+'$Dynamic
+$Resize:On
+Icon = _LoadImage("assets/Vantiro-1.0v/vantirologo.png")
+_Icon Icon, Icon
+_Title "Vantiro"
+MenuTransitionImage = _NewImage(32, 32, 32)
+Const PI = 3.14159265359
+Const PIDIV180 = PI / 180
+Randomize Timer
+Dim Shared MainScreen
+Dim Shared SecondScreen
+MainScreen = _NewImage(1230, 662, 32)
+SecondScreen = _NewImage(1230, 662, 32)
+Screen MainScreen
+_Dest MainScreen
+Type Mouse
+    x As Long
+    y As Long
+    x1 As Long
+    y1 As Long
+    x2 As Long
+    y2 As Long
+    xbz As Double
+    ybz As Double
+    xaz As Double
+    yaz As Double
+    click As Integer
+    click2 As Integer
+    scroll As Integer
+End Type
+Dim Shared Mouse As Mouse
+Type Map
+    MaxWidth As Long
+    MaxHeight As Long
+    Layers As Long
+    TileSize As Long
+    Title As String
+    TextureSize As Long
+    Triggers As Long
+End Type
+Dim Shared Map As Map
+Type Entity
+    x As Double
+    y As Double
+    x1 As Long
+    y1 As Long
+    x2 As Long
+    y2 As Long
+    size As Double
+    sizeFirst As Double
+    xm As Double
+    ym As Double
+    rotation As Double
+    health As Double
+    healthFirst As Double
+    damage As Double
+    attacking As Integer
+    attackcooldown As Integer
+    tick As Integer
+    active As Integer
+    DistanceFromPlayer As Integer
+    weight As Double
+    maxspeed As Integer
+    speeding As Double
+    knockback As Double
+    onfire As Integer
+    special As String
+    SpecialDelay As Double
+    DamageCooldown As Double
+    DamageTaken As Double
+End Type
+Type DefEntity
+    maxspeed As Double
+    maxhealth As Integer
+    minhealth As Integer
+    maxdelay As Integer
+    mindelay As Integer
+    tickrate As Integer
+    mindamage As Integer
+    maxdamage As Integer
+    size As Integer
+End Type
+Dim Shared ZombieMax As Long
+Dim Shared VileMax As Integer
+Dim Shared SnarkMax As Integer
+Dim Shared SummonerMax As Integer
+PlayerSkin = 1
+Dim Shared PlayerSprite(4)
+Dim Shared PlayerHand(4)
+PlayerSprite(1) = _LoadImage("assets/Vantiro-1.0v/player/player1.png")
+PlayerHand(1) = _LoadImage("assets/Vantiro-1.0v/player/hand1.png")
+
+PlayerSprite(2) = _LoadImage("assets/Vantiro-1.0v/player/player2.png")
+PlayerHand(2) = _LoadImage("assets/Vantiro-1.0v/player/hand1.png")
+
+PlayerSprite(3) = _LoadImage("assets/Vantiro-1.0v/player/player3.png")
+PlayerHand(3) = _LoadImage("assets/Vantiro-1.0v/player/hand3.png")
+
+PlayerSprite(4) = _LoadImage("assets/Vantiro-1.0v/player/player4.png")
+PlayerHand(4) = _LoadImage("assets/Vantiro-1.0v/player/hand4.png")
+
+
+Dim Shared PlayerDamage
+Dim Shared PlayerDeath
+PlayerDamage = _SndOpen("assets/Vantiro-1.0v/player/sounds/au.wav")
+PlayerDeath = _SndOpen("assets/Vantiro-1.0v/player/sounds/ua.wav")
+FlameThrowerSound = _SndOpen("assets/Vantiro-1.0v/sounds/interior_fire01_stereo.wav")
+
+Dim Shared ZombieWalk(4)
+ZombieWalk(1) = _SndOpen("assets/Vantiro-1.0v/mobs/sounds/headless_1.wav")
+ZombieWalk(2) = _SndOpen("assets/Vantiro-1.0v/mobs/sounds/headless_2.wav")
+ZombieWalk(3) = _SndOpen("assets/Vantiro-1.0v/mobs/sounds/headless_3.wav")
+ZombieWalk(4) = _SndOpen("assets/Vantiro-1.0v/mobs/sounds/headless_4.wav")
+
+Dim Shared ZombieShot(16)
+ZombieShot(1) = _SndOpen("assets/Vantiro-1.0v/mobs/sounds/shot/been_shot_01.wav")
+ZombieShot(2) = _SndOpen("assets/Vantiro-1.0v/mobs/sounds/shot/been_shot_02.wav")
+ZombieShot(3) = _SndOpen("assets/Vantiro-1.0v/mobs/sounds/shot/been_shot_03.wav")
+ZombieShot(4) = _SndOpen("assets/Vantiro-1.0v/mobs/sounds/shot/been_shot_04.wav")
+ZombieShot(5) = _SndOpen("assets/Vantiro-1.0v/mobs/sounds/shot/been_shot_05.wav")
+ZombieShot(6) = _SndOpen("assets/Vantiro-1.0v/mobs/sounds/shot/been_shot_06.wav")
+ZombieShot(7) = _SndOpen("assets/Vantiro-1.0v/mobs/sounds/shot/been_shot_07.wav")
+ZombieShot(8) = _SndOpen("assets/Vantiro-1.0v/mobs/sounds/shot/been_shot_08.wav")
+ZombieShot(9) = _SndOpen("assets/Vantiro-1.0v/mobs/sounds/shot/been_shot_09.wav")
+ZombieShot(10) = _SndOpen("assets/Vantiro-1.0v/mobs/sounds/shot/been_shot_10.wav")
+ZombieShot(11) = _SndOpen("assets/Vantiro-1.0v/mobs/sounds/shot/been_shot_11.wav")
+ZombieShot(12) = _SndOpen("assets/Vantiro-1.0v/mobs/sounds/shot/been_shot_12.wav")
+ZombieShot(13) = _SndOpen("assets/Vantiro-1.0v/mobs/sounds/shot/been_shot_13.wav")
+ZombieShot(14) = _SndOpen("assets/Vantiro-1.0v/mobs/sounds/shot/been_shot_14.wav")
+ZombieShot(15) = _SndOpen("assets/Vantiro-1.0v/mobs/sounds/shot/been_shot_15.wav")
+ZombieShot(16) = _SndOpen("assets/Vantiro-1.0v/mobs/sounds/shot/been_shot_16.wav")
+
+
+
+
+ZombieMax = 200
+Dim Shared Zombie(ZombieMax) As Entity
+Dim Shared DefZombie As DefEntity
+DefZombie.maxspeed = 820
+DefZombie.size = 26
+DefZombie.tickrate = 15
+DefZombie.maxdamage = 10
+DefZombie.mindamage = 4
+DefZombie.maxhealth = 100
+DefZombie.minhealth = 70
+
+
+Type Player
+    x As Double
+    y As Double
+    xb As Double
+    yb As Double
+    x1 As Long
+    x2 As Long
+    y1 As Long
+    y2 As Long
+    size As Integer
+    xm As Double
+    ym As Double
+    Rotation As Double
+    TouchX As Integer
+    TouchY As Integer
+    Health As Double
+    DamageToTake As Integer
+    DamageCooldown As Integer
+    Armor As Double
+    shooting As Double
+    weapon1id As Integer
+    weapon2id As Integer
+End Type
+PlayerLimit = 1
+Dim Shared Player(PlayerLimit) As Player
+Type PlayerMembers
+    x As Double
+    y As Double
+    xo As Double
+    yo As Double
+    xbe As Double
+    ybe As Double
+    angle As Single
+    xvector As Double
+    yvector As Double
+    mode As Double
+    visible As Double
+    speed As Double
+    angleanim As Double
+    distanim As Double
+End Type
+Dim Shared PlayerMember(2) As PlayerMembers
+Type Raycast
+    x As Double
+    y As Double
+    angle As Double
+    damage As Double
+    knockback As Double
+    owner As Integer
+End Type
+Dim Shared Ray As Raycast
+Dim Shared RayM(3) As Raycast
+Type Tiles
+    ID As Long
+    solid As Integer
+    animationframe As Integer
+    rend_spritex As Long
+    rend_spritey As Long
+    PlayerStand As Integer
+    associated As Integer
+    x1y1 As Integer
+    x2y1 As Integer
+    x1y2 As Integer
+    x2y2 As Integer
+    fragile As Integer
+    transparent As Integer
+End Type
+Type Weapon
+    x As Double
+    y As Double
+    xm As Double
+    ym As Double
+    visible As Integer
+    cangrab As Integer
+    rotation As Double
+    wtype As Integer
+    shooting As Integer
+End Type
+Dim Shared Gun(2) As Weapon
+Dim Shared GunDisplay(2) As Weapon
+Type Menu
+    x1d As Double
+    x2d As Double
+    y1d As Double
+    y2d As Double
+    x1 As Long
+    x2 As Long
+    y1 As Long
+    y2 As Long
+    Colors As Long
+    red As Integer
+    green As Integer
+    blue As Integer
+    text As String
+    textsize As Integer
+    hex As String
+    style As Integer
+    clicktogo As String
+    extra As Integer
+    extra2 As Integer
+    extra3 As Integer
+    visual As Integer
+    visual2 As String
+    d_hover As Integer
+    d_clicked As Integer
+    OffsetY As Double
+    OffsetX As Double
+End Type
+Type Hud
+    x1 As Long
+    x2 As Long
+    y1 As Long
+    y2 As Long
+    x As Double
+    y As Double
+    xm As Double
+    ym As Double
+    xbe As Double
+    ybe As Double
+    rotation As Double
+    rotationbe As Double
+    rotationoffset As Double
+    stringered As Long
+    size As Long
+    textsize As Integer
+End Type
+Type Trigger
+    x1 As Double
+    y1 As Double
+    x2 As Double
+    y2 As Double
+    sizex As Double
+    sizey As Double
+    class As String
+    val1 As Double
+    val2 As Double
+    val3 As Double
+    val4 As Double
+    text As String
+    textspeed As Double
+    triggername As String
+    needclick As Integer
+End Type
+VantiroTitulo = _LoadImage("assets/Vantiro-1.0v/Vantiro.png")
+Background1 = _LoadImage("assets/Vantiro-1.0v/Background.png")
+Dim Shared Hud(9) As Hud
+Dim Shared Minimap As Hud
+TXTGlint = _LoadImage("assets/begs world/textures/glint.png")
+Dim Shared MenuMax
+MenuMax = 64
+Dim Shared Menu(MenuMax) As Menu
+Dim Shared MenuAnim As Menu
+For i = 1 To MenuMax
+    Menu(i).x1 = 0: Menu(i).x2 = 0: Menu(i).y1 = 0: Menu(i).y2 = 0: Menu(i).Colors = 0: Menu(i).red = 0: Menu(i).green = 0: Menu(i).blue = 0
+    Menu(i).text = " "
+    Menu(i).textsize = -1
+    Menu(i).hex = ""
+    Menu(i).style = 0
+    Menu(i).clicktogo = ""
+    Menu(i).extra = 0
+    Menu(i).d_hover = 0
+    Menu(i).d_clicked = 0
+Next
+Dim Shared Colors As Long
+Begsfont$ = "assets\begs world\mouse.ttf"
+Dim Shared BegsFontSizes(1024)
+Dim Shared MenusImages(128)
+For i = 1 To 1024
+    BegsFontSizes(i) = _LoadFont(Begsfont$, i, "")
+Next
+CanLeave = 0
+ToLoad$ = "menu"
+ToLoad2$ = "menu"
+GoSub load
+_Dest MainScreen
+Do
+    _Limit 75
+    Cls
+    GoSub MenuSystem
+    _Display
+Loop While quit = 0
+'Input "Select a map", Map$
+Map$ = "Forest"
+Cls
+MinimapTxtSize = 8
+MapLoaded = LoadMapSettings(Map$)
+Dim Shared Trigger(Map.Triggers) As Trigger
+MinimapIMG = _NewImage(Map.MaxWidth * 8, Map.MaxHeight * 8, 32)
+
+Dim Shared Tile(Map.MaxWidth + 20, Map.MaxHeight + 20, Map.Layers) As Tiles
+MapLoaded = LoadMap(Map$)
+Dim Shared LastPart As Integer
+Dim Shared Tileset
+
+Tileset = _LoadImage("assets/Vantiro-1.0v/tileset.png")
+
+
+E_KeyIcon = _LoadImage("assets/Vantiro-1.0v/items/ekeyicon.png")
+
+Guns_Pistol = _LoadImage("assets/Vantiro-1.0v/items/pistol.png")
+Guns_Shotgun = _LoadImage("assets/Vantiro-1.0v/items/shotgun.png")
+Guns_SMG = _LoadImage("assets/Vantiro-1.0v/items/smg.png")
+Guns_Flame = _LoadImage("assets/Vantiro-1.0v/items/flamethrower.png")
+Guns_Grenade = _LoadImage("assets/Vantiro-1.0v/items/grenade.png")
+HudSelected = _LoadImage("assets/Vantiro-1.0v/Selected.png")
+HudNotSelected = _LoadImage("assets/Vantiro-1.0v/NotSelected.png")
+HudNoAmmo = _LoadImage("assets/Vantiro-1.0v/NoAmmo.png")
+
+Zombie = _LoadImage("assets/Vantiro-1.0v/mobs/zombie.png")
+ZombieRunner = _LoadImage("assets/Vantiro-1.0v/mobs/fastzombie.png")
+ZombieSlower = _LoadImage("assets/Vantiro-1.0v/mobs/slowzombie.png")
+ZombieBomber = _LoadImage("assets/Vantiro-1.0v/mobs/bomberzombie.png")
+ZombieBiohazard = _LoadImage("assets/Vantiro-1.0v/mobs/zombie.png") ' GIVE ME IMAGE
+ZombieBrute = _LoadImage("assets/Vantiro-1.0v/mobs/zombie.png") 'GIVE ME IMAGE
+ZombieFire = _LoadImage("assets/Vantiro-1.0v/mobs/firezombie.png")
+
+ShellShotgunAmmo = _LoadImage("assets/Vantiro-1.0v/items/shotgunammo.png")
+PistolShellAmmo = _LoadImage("assets/Vantiro-1.0v/items/pistolammo.png")
+GasCanAmmo = _LoadImage("assets/Vantiro-1.0v/items/gascan.png")
+
+
+Dim Shared WallShot
+WallShot = _LoadImage("assets/Vantiro-1.0v/items/wallshot.png")
+GlassShard = _LoadImage("assets/Vantiro-1.0v/items/glassshard.png")
+Dim Shared Bloodsplat
+BloodsplatGreen = _LoadImage("assets/Vantiro-1.0v/items/bloodsplatgreen.png")
+BloodsplatRed = _LoadImage("assets/Vantiro-1.0v/items/bloodsplatred.png")
+Gib_Skull = _LoadImage("assets/Vantiro-1.0v/items/skull.png")
+Gib_Bone = _LoadImage("assets/Vantiro-1.0v/items/bone.png")
+Dim Shared Bloodonground
+Bloodonground = _LoadImage("assets/Vantiro-1.0v/items/bloodonground.png")
+Guns_Sound_PistolShot = _SndOpen("assets/Vantiro-1.0v/sounds/pistolshot.wav")
+Guns_Sound_ShotgunShot = _SndOpen("assets/Vantiro-1.0v/sounds/shotgunshot.wav")
+
+
+Dim FireParticle(3)
+FireParticle(1) = _LoadImage("assets/Vantiro-1.0v/items/fire1.png")
+FireParticle(2) = _LoadImage("assets/Vantiro-1.0v/items/fire2.png")
+FireParticle(3) = _LoadImage("assets/Vantiro-1.0v/items/fire3.png")
+
+Dim SMGSounds(3)
+SMGSounds(1) = _SndOpen("assets/Vantiro-1.0v/sounds/hks1.wav")
+SMGSounds(2) = _SndOpen("assets/Vantiro-1.0v/sounds/hks2.wav")
+SMGSounds(3) = _SndOpen("assets/Vantiro-1.0v/sounds/hks3.wav")
+
+Dim ShellSounds(3)
+ShellSounds(1) = _SndOpen("assets/Vantiro-1.0v/sounds/sshell1.wav")
+ShellSounds(2) = _SndOpen("assets/Vantiro-1.0v/sounds/sshell2.wav")
+ShellSounds(3) = _SndOpen("assets/Vantiro-1.0v/sounds/sshell3.wav")
+Dim PistolShellSounds(3)
+PistolShellSounds(1) = _SndOpen("assets/Vantiro-1.0v/sounds/pl_shell1.wav")
+PistolShellSounds(2) = _SndOpen("assets/Vantiro-1.0v/sounds/pl_shell2.wav")
+PistolShellSounds(3) = _SndOpen("assets/Vantiro-1.0v/sounds/pl_shell3.wav")
+
+Dim BloodSounds(6)
+BloodSounds(1) = _SndOpen("assets/Vantiro-1.0v/sounds/flesh1.wav")
+BloodSounds(2) = _SndOpen("assets/Vantiro-1.0v/sounds/flesh2.wav")
+BloodSounds(3) = _SndOpen("assets/Vantiro-1.0v/sounds/flesh3.wav")
+BloodSounds(4) = _SndOpen("assets/Vantiro-1.0v/sounds/flesh5.wav")
+BloodSounds(5) = _SndOpen("assets/Vantiro-1.0v/sounds/flesh6.wav")
+BloodSounds(6) = _SndOpen("assets/Vantiro-1.0v/sounds/flesh7.wav")
+Dim Shared GlassShadder(3)
+GlassShadder(1) = _SndOpen("assets/Vantiro-1.0v/sounds/bustglass1.wav")
+GlassShadder(2) = _SndOpen("assets/Vantiro-1.0v/sounds/bustglass2.wav")
+GlassShadder(3) = _SndOpen("assets/Vantiro-1.0v/sounds/bustglass3.wav")
+Dim GlassSound(4)
+GlassSound(1) = _SndOpen("assets/Vantiro-1.0v/sounds/glass1.wav")
+GlassSound(2) = _SndOpen("assets/Vantiro-1.0v/sounds/glass2.wav")
+GlassSound(3) = _SndOpen("assets/Vantiro-1.0v/sounds/glass3.wav")
+GlassSound(4) = _SndOpen("assets/Vantiro-1.0v/sounds/glass4.wav")
+
+
+SND_Explosion = _SndOpen("assets/Vantiro-1.0v/sounds/explode.mp3")
+Particle_Shotgun_Shell = _LoadImage("assets/Vantiro-1.0v/items/shotgunshell.png")
+Particle_Pistol_Shell = _LoadImage("assets/Vantiro-1.0v/items/pistolshell.png")
+Particle_Smoke = _LoadImage("assets/Vantiro-1.0v/items/smoke.png")
+Particle_Explosion = _LoadImage("assets/Vantiro-1.0v/items/explosion.png")
+Dim Shared CameraX As Double
+Dim Shared CameraY As Double
+Dim Shared CameraXM As Double
+Dim Shared CameraYM As Double
+Dim Shared Zoom As Double
+Type Particle
+    x As Double
+    y As Double
+    z As Double
+    txt As Integer
+    xm As Double
+    ym As Double
+    zm As Double
+    froozen As Integer
+    rotation As Double
+    rotationspeed As Double
+    visible As Integer
+    partid As String
+    playwhatsound As String
+    BloodColor As String
+    special As Integer
+End Type
+Dim Shared GrenadeMax
+Dim Shared FireMax
+FireMax = 128
+GrenadeMax = 16
+
+Dim Shared ParticlesMax
+Dim Shared BloodMax
+Dim Shared LastBlood
+ParticlesMax = 1024
+Dim Shared Grenade(GrenadeMax) As Particle
+Dim Shared Fire(FireMax) As Particle
+Dim Shared Part(ParticlesMax) As Particle
+
+
+HudAmmo = _NewImage(300, 300, 32)
+Dim Shared PlayerInteract
+FlameAmmoMax = 200
+SMGAmmoMax = 400
+ShotgunAmmoMax = 40
+GrenadeAmmoMax = 5
+GoSub RestartEverything
+PlayerSkin2 = PlayerSkin
+Do
+    If FlameAmmo > FlameAmmoMax Then FlameAmmo = FlameAmmoMax
+    If SMGAmmo > SMGAmmoMax Then SMGAmmo = SMGAmmoMax
+    If ShotgunAmmo > ShotgunAmmoMax Then ShotgunAmmo = ShotgunAmmoMax
+    If GrenadeAmmo > GrenadeAmmoMax Then GrenadeAmmo = GrenadeAmmoMax
+    Mouse.scroll = 0
+    _KeyClear
+    Do While _MouseInput
+        Mouse.x = _MouseX
+        Mouse.y = _MouseY
+        Mouse.click = _MouseButton(1)
+        Mouse.click2 = _MouseButton(2)
+        If _MouseWheel <> 0 Then Mouse.scroll = _MouseWheel
+    Loop
+    PlayerInteract = 0
+    If PlayerInteract = 0 And _KeyDown(101) = -1 And PlayerInteractPre = 0 Then PlayerInteract = 1
+    PlayerInteractPre = _KeyDown(101)
+    ' If _KeyDown(15104) And delay = 0 Then HideUI = HideUI + 1: delay = 20: If HideUI = 2 Then HideUI = 0
+    If Player(1).Health > 100 Then Player(1).Health = Player(1).Health - 0.05
+    If Player(1).Health < -1 Then Player(1).Health = -1
+    _Limit 62
+    Cls
+    ff% = ff% + 1
+    If Timer - start! >= 1 Then fps% = ff%: ff% = 0: start! = Timer
+    If delay > 0 Then delay = delay - 1
+    If ShootDelay > 0 Then ShootDelay = ShootDelay - 1
+    'Camera Control
+    'If _KeyDown(114) And Debug = 1 Then Player(1).Health = 100: PlayerCantMove = 0: DeathTimer = 0
+    GoSub RenderSprites
+    GoSub ParticleLogic
+    If PlayerCantMove = 0 Then GoSub PlayerMovement
+    GoSub HandsCode
+    GoSub GrenadeLogic
+    GoSub ZombieAI
+    GoSub RenderMobs
+    GoSub RenderPlayer
+    Player(1).shooting = 0
+    GoSub GunCode
+    GoSub Fire
+    GoSub RenderLayer3
+    GoSub TriggerPlayer
+
+    CameraXM = Fix(CameraXM / 1.1)
+    CameraYM = Fix(CameraYM / 1.1)
+    CameraX = (Player(1).x / Map.TileSize) - (_Width / (Map.TileSize * 2)): CameraY = (Player(1).y / Map.TileSize) - (_Height / (Map.TileSize * 2)): CameraX = CameraX + CameraXM / 100: CameraY = CameraY + CameraYM / 100
+
+    ' If Debug = 1 Then Tile(Fix(Player(1).x / Map.TileSize), Fix(Player(1).y / Map.TileSize), 1).PlayerStand = 1
+    '  If _KeyDown(15616) And delay = 0 Then Debug = Debug + 1: delay = 20: If Debug = 2 Then Debug = 0
+    '  If _KeyDown(102) And delay = 0 And Debug = 1 Then Freecam = Freecam + 1: delay = 20: If Freecam = 2 Then Freecam = 0
+
+    Player(1).Health = Player(1).Health - Player(1).DamageToTake: Player(1).DamageToTake = 0
+    If Player(1).Health <= 0 And DeathTimer = 0 Then DeathTimer = 1
+    If DeathTimer > 0 Then GoSub PlayerDeath
+    If Mouse.scroll = -1 And PlayerCantMove = 0 Then HudChange = 1: WantSlot = 0
+    If Mouse.scroll = 1 And PlayerCantMove = 0 Then HudChange = -1: WantSlot = 0
+
+    Line (0, 0)-(_Width, _Height), _RGBA32(0, 0, 0, DayAmount), BF
+    If WaveWait > 0 Then GoSub WaveChange
+    GoSub DrawHud
+    If HideUI = 0 Then GoSub MiniMapCode
+    If WaveBudget = 0 Then GoSub WaveChange
+    If Wave = 16 Then GoSub TurningDay
+    _Display
+    GoSub ResizeScreen
+
+Loop
+
+RestartEverything:
+Wave = 0
+WaveWait = 0
+WaveBudget = 0
+FlameAmmo = FlameAmmoMax
+SMGAmmo = SMGAmmoMax
+ShotgunAmmo = ShotgunAmmoMax
+GrenadeAmmo = GrenadeAmmoMax
+'Generate Minimap Texture
+GoSub GenerateMiniMap
+PlayerOnFire = 0
+RayM(1).x = (_Width / 2) - (_Height / 2)
+RayM(1).y = 0
+RayM(2).x = (_Width / 2) + (_Height / 2)
+RayM(2).y = _Height
+MiniMapGoBack = 20
+DayAmount = 138
+Player(1).x = 2064 * 2
+Player(1).y = 2064 * 2
+Player(1).size = 25
+GunDisplay(1).visible = 1
+GunDisplay(1).wtype = 2
+Mouse.click = 0
+For i = 1 To GrenadeMax
+    Grenade(i).x = 64
+    Grenade(i).y = 64
+    Grenade(i).z = 1
+    Grenade(i).xm = 64
+    Grenade(i).ym = 64
+    Grenade(i).froozen = 0
+    Grenade(i).rotation = 0
+    Grenade(i).rotationspeed = 0
+    Grenade(i).visible = 0
+Next
+For i = 1 To ZombieMax
+    Zombie(i).active = 0
+    Zombie(i).onfire = 0
+Next
+
+For i = 1 To FireMax
+    Fire(i).visible = 0
+    Fire(i).txt = 0
+    Fire(i).xm = 0
+    Fire(i).ym = 0
+    Fire(i).froozen = 0
+Next
+RenderLayer1 = 1
+RenderLayer2 = 1
+RenderLayer3 = 1
+delay = 100
+
+For i = 1 To ParticlesMax
+    Part(i).froozen = 0
+    Part(i).visible = 0
+Next
+Zoom = 1
+PlayerCantMove = 0
+DeathTimer = 0
+PlayerIsOnFire = 0
+Player(1).Health = 150
+Player(1).DamageToTake = 0
+Return
+
+TurningDay:
+If Player(1).Health <= 0 Then Wave = 1
+If DelayUntilStart > 0 Then DelayUntilStart = DelayUntilStart - 1
+If DelayUntilStart = 0 And DayAmount > 0 Then DayAmount = DayAmount / 1.005
+If DayAmount < 20 Then PlayerIsOnFire = 5
+
+If DayAmount < 1 Then DayAmount = 0
+If DayAmount = 0 And Player(1).Health > 0 Then
+    If Showtext = 1 Then WaveDisplayY = -thy * 2
+    Showtext = 2
+    Darkening = Darkening + 0.5
+    If Darkening > 400 Then System
+    Line (0, 0)-(_Width, _Height), _RGBA32(0, 0, 0, Darkening), BF
+
+    Text$ = "Descanse bem"
+    FontSizeUse = 70
+    GoSub HudText
+
+    dist = (Abs(WaveDisplayY - _Width / 2) / 50): WaveDisplayY = WaveDisplayY + 1 / (dist / 15)
+    WaveDisplayTHX = thx: WaveDisplayTHY = thy
+    _PutImage (_Width / 2 - WaveDisplayTHX / 2, WaveDisplayY - WaveDisplayTHY / 2), ImgToMenu
+
+    Text$ = ("Eles voltarao amanha.")
+    FontSizeUse = 40
+    GoSub HudText
+
+    WaveDisplayTHX = thx
+    _PutImage (_Width / 2 - WaveDisplayTHX / 2, WaveDisplayY + WaveDisplayTHY / 2), ImgToMenu
+
+End If
+If Showtext = 1 Then
+    Text$ = "Entre dentro de casa."
+    FontSizeUse = 70
+    GoSub HudText
+
+    dist = (Abs(WaveDisplayY - _Width / 2) / 50): WaveDisplayY = WaveDisplayY + 1 / (dist / 15)
+    WaveDisplayTHX = thx: WaveDisplayTHY = thy
+    _PutImage (_Width / 2 - WaveDisplayTHX / 2, WaveDisplayY - WaveDisplayTHY / 2), ImgToMenu
+
+    Text$ = ("O sol esta chegando.")
+    FontSizeUse = 40
+    GoSub HudText
+
+    WaveDisplayTHX = thx
+    _PutImage (_Width / 2 - WaveDisplayTHX / 2, WaveDisplayY + WaveDisplayTHY / 2), ImgToMenu
+End If
+
+Return
+
+MiniMapCode:
+RenderZombiesMinimap = 1
+UpdateMiniMap = UpdateMiniMap - 1
+If UpdateMiniMap < 0 Then GoSub GenerateMiniMap
+If MiniMapGoBack > 0 Then MiniMapGoBack = MiniMapGoBack - 1
+CheckMiniMapKey = 0
+If CheckMiniMapKey = 0 And _KeyDown(9) = -1 And CheckMiniMapKeyPre = 0 Then CheckMiniMapKey = 1
+CheckMiniMapKeyPre = _KeyDown(9)
+If CheckMiniMapKey = 1 Then ToggleMinimapBig = ToggleMinimapBig + 1: If ToggleMinimapBig = 2 Then ToggleMinimapBig = 0
+If MiniMapGoBack = 1 Then ToggleMinimapBig = 0: CheckMiniMapKey = 1
+If ToggleMinimapBig = 1 And CheckMiniMapKey = 1 Then
+    RayM(1).x = Minimap.x1: RayM(1).y = Minimap.y1
+    RayM(1).damage = (_Width / 2) - (_Height / 2)
+    RayM(1).knockback = 0: RayM(1).owner = 1
+    RayM(2).x = Minimap.x2: RayM(2).y = Minimap.y2
+    RayM(2).damage = (_Width / 2) + (_Height / 2)
+    RayM(2).knockback = _Height
+    RayM(2).owner = 1
+    MiniMapGoBack = 360
+End If
+If ToggleMinimapBig = 0 And CheckMiniMapKey = 1 Then
+    RayM(1).x = Minimap.x1: RayM(1).y = Minimap.y1
+    RayM(1).damage = _Width - 200
+    RayM(1).knockback = 0: RayM(1).owner = 1
+    RayM(2).x = Minimap.x2: RayM(2).y = Minimap.y2
+    RayM(2).damage = _Width
+    RayM(2).knockback = 200
+    RayM(2).owner = 1
+End If
+For i = 1 To 2
+    If RayM(i).owner = 1 Then
+        dx = RayM(i).x - RayM(i).damage: dy = RayM(i).y - RayM(i).knockback
+        rotation = ATan2(dy, dx) ' Angle in radians
+        RayM(i).angle = (rotation * 180 / PI) + 90
+        If RayM(i).angle > 180 Then RayM(i).angle = RayM(i).angle - 179.9
+        xvector = Sin(RayM(i).angle * PIDIV180): yvector = -Cos(RayM(i).angle * PIDIV180)
+        RayM(i).x = RayM(i).x + xvector * (0.1 + (Distance(RayM(i).x, RayM(i).y, RayM(i).damage, RayM(i).knockback) / 5))
+        RayM(i).y = RayM(i).y + yvector * (0.1 + (Distance(RayM(i).x, RayM(i).y, RayM(i).damage, RayM(i).knockback) / 5))
+        If Int(RayM(i).x) = Int(RayM(i).damage) And Int(RayM(i).y) = Int(RayM(i).knockback) Then RayM(i).owner = 0
+    End If
+Next
+Minimap.x1 = RayM(1).x
+Minimap.y1 = RayM(1).y
+Minimap.x2 = RayM(2).x
+Minimap.y2 = RayM(2).y
+MinimapSize = Int((Minimap.x2 - Minimap.x1) / 6)
+Offset = Abs((Int(Player(1).xm) + Int(Player(1).ym) / 2) / 10) + 100 + MinimapSize
+_PutImage (Minimap.x1, Minimap.y1)-(Minimap.x2, Minimap.y2), MinimapIMG, MainScreen, ((Player(1).x / 8) - Offset, (Player(1).y / 8) - Offset)-((Player(1).x / 8) + Offset, (Player(1).y / 8) + Offset)
+Line (Minimap.x1, Minimap.y1)-(Minimap.x2, Minimap.y2), _RGBA32(0, 255, 0, UpdateMiniMap / 1.5), BF
+Return
+
+GenerateMiniMap:
+UpdateMiniMap = 60
+_Dest MinimapIMG
+For x = 0 To Map.MaxWidth
+    For y = 0 To Map.MaxHeight
+        z = 1
+        xs = x * MinimapTxtSize
+        ys = y * MinimapTxtSize
+        If Tile(x, y, z).ID <> 0 Then _PutImage (xs, ys)-(xs + (MinimapTxtSize), ys + (MinimapTxtSize)), Tileset, MinimapIMG, (Tile(x, y, z).rend_spritex * Map.TextureSize, Tile(x, y, z).rend_spritey * Map.TextureSize)-(Tile(x, y, z).rend_spritex * Map.TextureSize + (Map.TextureSize - 1), Tile(x, y, z).rend_spritey * Map.TextureSize + (Map.TextureSize - 1))
+        Line (xs, ys)-(xs + (MinimapTxtSize), ys + (MinimapTxtSize)), _RGBA32(0, 0, 0, 64), BF
+        z = 2
+        If Tile(x, y, z).ID <> 0 Then _PutImage (xs, ys)-(xs + (MinimapTxtSize), ys + (MinimapTxtSize)), Tileset, MinimapIMG, (Tile(x, y, z).rend_spritex * Map.TextureSize, Tile(x, y, z).rend_spritey * Map.TextureSize)-(Tile(x, y, z).rend_spritex * Map.TextureSize + (Map.TextureSize - 1), Tile(x, y, z).rend_spritey * Map.TextureSize + (Map.TextureSize - 1))
+    Next
+Next
+If RenderZombiesMinimap = 1 Then
+    For i = 1 To ZombieMax
+        If Zombie(i).active = 1 Then
+            If Zombie(i).special = "Runner" Then Line (Zombie(i).x1 / 8, Zombie(i).y1 / 8)-(Zombie(i).x2 / 8, Zombie(i).y2 / 8), _RGB32(255, 0, 255), BF
+            If Zombie(i).special = "Brute" Then Line (Zombie(i).x1 / 8, Zombie(i).y1 / 8)-(Zombie(i).x2 / 8, Zombie(i).y2 / 8), _RGB32(255, 0, 0), BF
+            If Zombie(i).special = "Slower" Then Line (Zombie(i).x1 / 8, Zombie(i).y1 / 8)-(Zombie(i).x2 / 8, Zombie(i).y2 / 8), _RGB32(64, 0, 64), BF
+            If Zombie(i).special = "Bomber" Then Line (Zombie(i).x1 / 8, Zombie(i).y1 / 8)-(Zombie(i).x2 / 8, Zombie(i).y2 / 8), _RGB32(128, 128, 128), BF
+            If Zombie(i).special = "Fire" Then Line (Zombie(i).x1 / 8, Zombie(i).y1 / 8)-(Zombie(i).x2 / 8, Zombie(i).y2 / 8), _RGB32(255, 128, 0), BF
+            If Zombie(i).special = "Biohazard" Then Line (Zombie(i).x1 / 8, Zombie(i).y1 / 8)-(Zombie(i).x2 / 8, Zombie(i).y2 / 8), _RGB32(0, 255, 0), BF
+            If Zombie(i).special = "Normal" Then Line (Zombie(i).x1 / 8, Zombie(i).y1 / 8)-(Zombie(i).x2 / 8, Zombie(i).y2 / 8), _RGB32(28, 125, 46), BF
+        End If
+    Next
+End If
+Line (Player(1).x1 / 8, Player(1).y1 / 8)-(Player(1).x2 / 8, Player(1).y2 / 8), _RGB32(255, 255, 255), BF
+_Dest MainScreen
+Return
+
+
+Fire:
+For i = 1 To FireMax
+    If Fire(i).visible > 0 Then
+        If Fire(i).froozen > Fire(i).visible Then Fire(i).visible = Fire(i).visible + 1: If Fire(i).froozen = Fire(i).visible Then Fire(i).froozen = 0
+        Fire(i).x = Fire(i).x + (Fire(i).xm / 10)
+        Fire(i).y = Fire(i).y + (Fire(i).ym / 10)
+        Fire(i).xm = Fire(i).xm / 1.01
+        Fire(i).ym = Fire(i).ym / 1.01
+        '    RotoZoom ETSX(Fire(i).x), ETSY(Fire(i).y), FireParticle(Int(Rnd * 3) + 1), 0.1 + (Fire(i).visible / 10), Int(Rnd * 10) - 5
+        Size = 0.1 + Fire(i).visible
+        _PutImage (ETSX(Fire(i).x) - Size, ETSY(Fire(i).y) - Size)-(ETSX(Fire(i).x) + Size, ETSY(Fire(i).y) + Size), FireParticle(1)
+        If Fire(i).txt = 0 Then
+            For z = 1 To ZombieMax
+                If Zombie(z).active = 1 Then If Distance(Fire(i).x, Fire(i).y, Zombie(z).x, Zombie(z).y) < (Size * 2) Then Zombie(z).onfire = Fire(i).visible * 5
+            Next
+        End If
+        If Int(Rnd * 20) = 3 Then Fire(i).visible = Fire(i).visible - 1
+        If Fire(i).visible > 10 And Fire(i).txt <> 4 And Distance(Fire(i).x, Fire(i).y, Player(1).x, Player(1).y) < Int(Size * 1.5) Then PlayerIsOnFire = 10 * Fire(i).visible
+        If Fire(i).visible > 20 And Fix(Fire(i).visible / 1.5) > 5 And Int(Rnd * 10) = 3 Then
+            FireLast = FireLast + 1: If FireLast > FireMax Then FireLast = 1
+            Fire(FireLast).txt = Fire(i).txt
+            Fire(i).visible = Fire(i).visible - 5
+            Fire(FireLast).froozen = Fix(Fire(i).visible * 2.5)
+            Fire(FireLast).visible = 2
+            Fire(FireLast).x = Fire(i).x + (Int(Rnd * 30) - 15) * 2
+            Fire(FireLast).y = Fire(i).y + (Int(Rnd * 30) - 15) * 2
+            For k = 1 To FireMax
+                If k <> i Then
+                    If Distance(Fire(i).x, Fire(i).y, Fire(k).x, Fire(k).y) < (Size * 2) Then Fire(FireLast).visible = 5
+                End If
+            Next
+        End If
+        If Fire(i).visible = 0 Then
+            Fire(i).txt = 0
+            Fire(i).xm = 0
+            Fire(i).ym = 0
+            Fire(i).froozen = 0
+        End If
+    End If
+
+Next
+Return
+
+
+
+
+
+
+ResizeScreen:
+If ResizeDelay > 0 Then ResizeDelay = ResizeDelay - 1
+If _Resize And ResizeDelay = 0 Then
+    Cls
+    Screen SecondScreen
+    _FreeImage MainScreen
+    MainScreen = _NewImage(_ResizeWidth, _ResizeHeight, 32)
+    Screen MainScreen
+
+    ResizeDelay = 5
+End If
+Return
+
+TriggerPlayer:
+For i = 1 To Map.Triggers
+    If TriggerPlayerCollide(Player(1), Trigger(i)) Then
+        Select Case Trigger(i).class
+            Case "TP"
+                Player(1).x = Trigger(i).val1 * 2
+                Player(1).y = Trigger(i).val2 * 2
+            Case "DoorUse"
+                If PlayerInteract = 1 Then
+                    DoorX = Fix(((Trigger(i).x2 + Trigger(i).x1) / 2) / Map.TileSize)
+                    DoorY = Fix(((Trigger(i).y2 + Trigger(i).y1) / 2) / Map.TileSize)
+                    Trigger(i).val3 = Trigger(i).val3 + 1: If Trigger(i).val3 > 1 Then Trigger(i).val3 = 0
+                    If Trigger(i).val3 = 0 Then Tile(DoorX, DoorY, 2).ID = Trigger(i).val1: Tile(DoorX, DoorY, 2).solid = 1
+                    If Trigger(i).val3 = 1 Then Tile(DoorX, DoorY, 2).ID = Trigger(i).val2: Tile(DoorX, DoorY, 2).solid = 0
+                    IDTOTEXTURE = Tile(DoorX, DoorY, 2).ID: Tile(DoorX, DoorY, 2).rend_spritey = 0
+                    Do
+                        If IDTOTEXTURE > 16 Then Tile(DoorX, DoorY, 2).rend_spritey = Tile(DoorX, DoorY, 2).rend_spritey + 1: IDTOTEXTURE = IDTOTEXTURE - 16
+                        Tile(DoorX, DoorY, 2).rend_spritex = IDTOTEXTURE
+                    Loop While IDTOTEXTURE > 16
+                End If
+        End Select
+    End If
+Next
+Return
+
+
+PlayerDeath:
+If DeathTimer = 1 Then _SndPlay PlayerDeath
+If DeathTimer < 1000 Then DeathTimer = DeathTimer + 3
+Hud(1).ym = DeathTimer * 1.5
+If 50 > Int(Rnd * DeathTimer) And DeathTimer < 600 Then SpawnBloodParticle Player(1).x - 20 + Int(Rnd * 21), Player(1).y - 20 + Int(Rnd * 21), -180 + Int(Rnd * 361), 100, "red": Part(LastPart).xm = Int(Rnd * 1000) - 500: Part(LastPart).ym = Int(Rnd * 1000) - 500
+DayAmount = DayAmount + 1
+PlayerCantMove = 1
+If DayAmount > 1000 Then GoSub RestartEverything
+Return
+
+WaveChange:
+
+Randomize Timer
+If WaveWait = 0 Then
+    WaveWait = 600: WaveDisplayY = -thy: Wave = Wave + 1: WaveBudget = (Wave * 10) + Int(Rnd * 22)
+    If WaveBudget > 128 Then WaveBudget = 128
+End If
+If Wave = 16 Then WaveWait = -9999999: DelayUntilStart = 2000: Showtext = 1: WaveDisplayY = -thy * 2: GoTo EndWaveCode
+If WaveWait = 1 Then
+    DayAmount = DayAmount - 1
+    For i = 1 To WaveBudget
+        CreateZombie:
+        Special = 0
+        If Int(Rnd * 3) + 1 = 1 Then Special = 1
+        If Special = 1 Then SpecialType = Int(Rnd * 6) + 1
+
+        If Special <> 1 Then
+            Rand = Int(Rnd * 80)
+            If Rand = 47 Then
+                Zombie(i).size = Int(Rnd * (DefZombie.size - 20 + 1)) + 20 ' DefZombie.size
+            Else
+                Zombie(i).size = DefZombie.size
+            End If
+            Zombie(i).active = 1
+            Zombie(i).maxspeed = Int(Rnd * (500 - 300 + 1)) + 300
+            Zombie(i).damage = Int(Rnd * (10 - 2 + 1)) + 2
+            Zombie(i).speeding = Int(Rnd * (20 - 10 + 1)) + 10
+            Zombie(i).knockback = Int(Rnd * (8 - 5 + 1)) + 5
+            Zombie(i).special = "Normal"
+            Zombie(i).health = Int(Rnd * (DefZombie.maxhealth - DefZombie.minhealth + 1)) + DefZombie.minhealth
+            Zombie(i).weight = 1
+        End If
+        If Special = 1 Then
+            Zombie(i).active = 1
+            Select Case SpecialType
+                Case 1 ' Runner
+                    Rand = Int(Rnd * 20120)
+                    Zombie(i).size = Int(Rnd * (34 - 25 + 1)) + 25
+                    Zombie(i).health = Int(Rnd * (Int(DefZombie.maxhealth / 1.5) - Fix(DefZombie.minhealth / 1.5) + 1)) + Fix(DefZombie.minhealth / 2)
+                    Zombie(i).maxspeed = Int(Rnd * (1200 - 900 + 1)) + 900
+                    Zombie(i).damage = Int(Rnd * (10 - 2 + 1)) + 2
+                    Zombie(i).speeding = Int(Rnd * (40 - 30 + 1)) + 30
+                    Zombie(i).knockback = Int(Rnd * (10 - 5 + 1)) + 5
+                    Zombie(i).special = "Runner"
+                    Zombie(i).weight = 2
+                Case 2 ' Brute
+                    Rand = Int(Rnd * 5)
+                    If Rand = 3 Then GoTo CreateZombie
+                    Zombie(i).size = Int(Rnd * (100 - 70 + 1)) + 70
+                    Zombie(i).health = Int(Rnd * ((DefZombie.maxhealth + 500) - DefZombie.minhealth + 1)) + DefZombie.minhealth + (Zombie(i).size * 2)
+                    Zombie(i).maxspeed = Int(Rnd * (650 - 500 + 1)) + 500
+                    Zombie(i).damage = Int(Rnd * (80 - 40 + 1)) + 40
+                    Zombie(i).speeding = Int(Rnd * (20 - 10 + 1)) + 10
+                    Zombie(i).knockback = Int(Rnd * (50 - 30 + 1)) + 30
+                    Zombie(i).special = "Brute"
+                    Zombie(i).weight = 20
+                Case 3 ' Slower
+                    Zombie(i).size = Int(Rnd * (34 - 25 + 1)) + 25
+                    Zombie(i).health = Int(Rnd * (Int(DefZombie.maxhealth + 20) - Fix(DefZombie.minhealth) + 1)) + Fix(DefZombie.minhealth)
+                    Zombie(i).damage = Int(Rnd * (30 - 20 + 1)) + 20
+                    Zombie(i).maxspeed = DefZombie.maxspeed
+                    Zombie(i).speeding = Int(Rnd * (7 - 4 + 1)) + 4
+                    Zombie(i).weight = 3
+                    Zombie(i).knockback = Int(Rnd * (10 - 5 + 1)) + 5
+                    Zombie(i).special = "Slower"
+                Case 4 ' Bomber
+                    Rand = Int(Rnd * 7)
+                    If Rand = 5 Then GoTo CreateZombie
+
+                    Zombie(i).size = Int(Rnd * (34 - 25 + 1)) + 25
+                    Zombie(i).health = Int(Rnd * (Int(DefZombie.maxhealth / 2) - Fix(DefZombie.minhealth / 2) + 1)) + Fix(DefZombie.minhealth / 2)
+                    Zombie(i).maxspeed = Int(Rnd * (850 - 700 + 1)) + 700
+                    Zombie(i).damage = Int(Rnd * (10 - 2 + 1)) + 2
+                    Zombie(i).speeding = Int(Rnd * (30 - 20 + 1)) + 20
+                    Zombie(i).knockback = Int(Rnd * (10 - 5 + 1)) + 5
+                    Zombie(i).special = "Bomber"
+                    Zombie(i).weight = 6
+                Case 5 ' Fire
+                    Rand = Int(Rnd * 10)
+                    If Rand = 5 Then GoTo CreateZombie
+
+                    Zombie(i).size = Int(Rnd * (37 - 27 + 1)) + 27
+                    Zombie(i).health = Int(Rnd * (Int(DefZombie.maxhealth) - Fix(DefZombie.minhealth) + 1)) + Fix(DefZombie.minhealth)
+                    Zombie(i).maxspeed = Int(Rnd * (850 - 500 + 1)) + 500
+                    Zombie(i).damage = Int(Rnd * (10 - 2 + 1)) + 2
+                    Zombie(i).speeding = Int(Rnd * (10 - 5 + 1)) + 5
+                    Zombie(i).knockback = Int(Rnd * (10 - 5 + 1)) + 5
+                    Zombie(i).special = "Fire"
+                    Zombie(i).weight = 2
+                Case 6 ' Biohazard
+                    Rand = Int(Rnd * 200)
+                    Zombie(i).size = Int(Rnd * (37 - 27 + 1)) + 27
+                    Zombie(i).health = Int(Rnd * (Int(DefZombie.maxhealth) - Fix(DefZombie.minhealth) + 1)) + Fix(DefZombie.minhealth)
+                    Zombie(i).maxspeed = Int(Rnd * (850 - 500 + 1)) + 500
+                    Zombie(i).damage = Int(Rnd * (10 - 2 + 1)) + 2
+                    Zombie(i).speeding = Int(Rnd * (10 - 5 + 1)) + 5
+                    Zombie(i).knockback = -Int(Rnd * (10 - 5 + 1)) + 5
+                    Zombie(i).special = "Biohazard"
+                    Zombie(i).weight = 2
+            End Select
+        End If
+        Zombie(i).x = 4 + Int(Rnd * (Map.MaxWidth - 8))
+        Zombie(i).y = 4 + Int(Rnd * (Map.MaxHeight - 8))
+        If Tile(Fix(Zombie(i).x), Fix(Zombie(i).y), 2).solid = 1 Then GoTo CreateZombie
+        Zombie(i).x = Zombie(i).x * Map.TileSize
+        Zombie(i).y = Zombie(i).y * Map.TileSize
+        Zombie(i).healthFirst = Zombie(i).health
+        Zombie(i).sizeFirst = Zombie(i).size
+    Next
+End If
+If WaveWait > 0 Then WaveWait = WaveWait - 1
+Text$ = "Wave: " + Str$(Wave)
+FontSizeUse = 70
+GoSub HudText
+dist = (Abs(WaveDisplayY - _Width / 2) / 50): WaveDisplayY = WaveDisplayY + 1 / (dist / 15)
+WaveDisplayTHX = thx: WaveDisplayTHY = thy
+_PutImage (_Width / 2 - WaveDisplayTHX / 2, WaveDisplayY - WaveDisplayTHY / 2), ImgToMenu
+Text$ = (_Trim$(Str$(WaveBudget)) + " Infectados chegando...")
+FontSizeUse = 40
+GoSub HudText
+WaveDisplayTHX = thx
+_PutImage (_Width / 2 - WaveDisplayTHX / 2, WaveDisplayY + WaveDisplayTHY / 2), ImgToMenu
+EndWaveCode:
+Return
+
+
+DrawHud:
+If DelayHud > 0 Then DelayHud = DelayHud - 1
+If DelayHud > 0 Then HudChange = 0
+If DelayHud = 0 And HudChange <> 0 Then DelayHud = 20: Hud(1).xm = HudChange * 800: Hud(1).ym = -200
+If HudChange <> 0 Then SlotRotation = SlotRotation + HudChange * 20
+SlotRotation = SlotRotation / 1.1
+HudSlotSelected = HudSlotSelected + HudChange
+HudSize = _Width + _Height
+Hud(1).x = _Width / 2 + (Hud(1).xm / 10)
+Hud(1).y = _Height + (Hud(1).ym / 10)
+Hud(1).xm = Hud(1).xm / 1.025
+Hud(1).ym = Hud(1).ym / 1.025
+
+'If HudChangeOld = 0 And HudChange <> 0 Then Hud(1).rotation = Hud(1).rotation + HudChange * 5
+HudChangeOld = HudChange
+Hud(1).rotation = Hud(1).rotation + SlotRotation 'Hud(1).rotation + Distance
+
+HighestHudAmount = 9999999
+For i = 2 To 6
+    Hud(i).xm = Hud(i).xm / 1.2
+    Hud(i).ym = Hud(i).ym / 1.2
+
+    degree = i * 72
+    Hudxv = Sin((Hud(1).rotation + degree) * PIDIV180)
+    Hudyv = -Cos((Hud(1).rotation + degree) * PIDIV180)
+    Hud(i).x = (Hud(1).x + Hudxv * 128)
+    Hud(i).y = (Hud(1).y + Hudyv * 64)
+    If Hud(i).y < HighestHudAmount Then HighestHudAmount = Hud(i).y: HighestHud = i
+
+Next
+If HudChange = 0 Then HudTopDistance = (Hud(HighestHud).x - Hud(1).x)
+Hud(1).rotation = Hud(1).rotation - (HudTopDistance) / 7.5
+HudChange = 0
+For i = 2 To 6
+    Hud(i).size = 32
+    Hud(i).x1 = Hud(i).x - Hud(i).size + Hud(i).xm
+    Hud(i).x2 = Hud(i).x + Hud(i).size + Hud(i).xm
+    Hud(i).y1 = Hud(i).y - Hud(i).size + Hud(i).ym
+    Hud(i).y2 = Hud(i).y + Hud(i).size + Hud(i).ym
+    Side0 = HighestHud - 2: If Side0 <= 1 Then Side0 = Side0 + 5
+    Side3 = HighestHud + 2: If Side3 >= 7 Then Side3 = Side3 - 5
+
+    Side1 = HighestHud - 1: If Side1 = 1 Then Side1 = 6
+    Side2 = HighestHud + 1: If Side2 = 7 Then Side2 = 2
+    If HideUI = 0 Then
+        If i = HighestHud Then _MapTriangle (0, 0)-(16, 32)-(32, 0), HudSelected To(Hud(i).x1, Hud(i).y2)-(Hud(1).x, Hud(1).y)-(Hud(i).x2, Hud(i).y2) ' Line (Hud(1).x, Hud(1).y)-(Hud(i).x1, Hud(i).y2), _RGB32(255, 255, 255): Line (Hud(1).x, Hud(1).y)-(Hud(i).x2, Hud(i).y2), _RGB32(255, 255, 255)
+        If i = Side1 Then _MapTriangle (0, 0)-(16, 32)-(32, 0), HudNotSelected To(Hud(i).x2, Hud(i).y1)-(Hud(1).x, Hud(1).y)-(Hud(i).x2, Hud(i).y2) ' Line (Hud(1).x, Hud(1).y)-(Hud(i).x1, Hud(i).y2), _RGB32(255, 255, 255): Line (Hud(1).x, Hud(1).y)-(Hud(i).x2, Hud(i).y2), _RGB32(255, 255, 255)
+        If i = Side2 Then _MapTriangle (0, 0)-(16, 32)-(32, 0), HudNotSelected To(Hud(i).x1, Hud(i).y1)-(Hud(1).x, Hud(1).y)-(Hud(i).x1, Hud(i).y2) ' Line (Hud(1).x, Hud(1).y)-(Hud(i).x1, Hud(i).y2), _RGB32(255, 255, 255): Line (Hud(1).x, Hud(1).y)-(Hud(i).x2, Hud(i).y2), _RGB32(255, 255, 255)
+        If i = Side3 Then _MapTriangle (0, 0)-(16, 32)-(32, 0), HudNotSelected To(Hud(i).x2, Hud(i).y1)-(Hud(1).x, Hud(1).y)-(Hud(i).x2, Hud(i).y2) ' Line (Hud(1).x, Hud(1).y)-(Hud(i).x1, Hud(i).y2), _RGB32(255, 255, 255): Line (Hud(1).x, Hud(1).y)-(Hud(i).x2, Hud(i).y2), _RGB32(255, 255, 255)
+        If i = Side0 Then _MapTriangle (0, 0)-(16, 32)-(32, 0), HudNotSelected To(Hud(i).x1, Hud(i).y1)-(Hud(1).x, Hud(1).y)-(Hud(i).x1, Hud(i).y2) ' Line (Hud(1).x, Hud(1).y)-(Hud(i).x1, Hud(i).y2), _RGB32(255, 255, 255): Line (Hud(1).x, Hud(1).y)-(Hud(i).x2, Hud(i).y2), _RGB32(255, 255, 255)
+        _PutImage (Hud(1).x - 5, Hud(1).y - 5)-(Hud(1).x + 5, Hud(1).y + 5), PlayerHand
+        '  If i <> HighestHud Then Line (Hud(1).x, Hud(1).y)-(Hud(i).x, Hud(i).y), _RGB32(255, 255, 255)
+        If i = HighestHud Then Line (Hud(i).x1, Hud(i).y1)-(Hud(i).x2, Hud(i).y2), _RGB32(255, 255, 255), BF
+        If i <> HighestHud Then Line (Hud(i).x1, Hud(i).y1)-(Hud(i).x2, Hud(i).y2), _RGB32(128, 128, 128), BF
+
+
+        If i = 2 Then
+            _PutImage (Hud(i).x1, Hud(i).y1)-(Hud(i).x2, Hud(i).y2), Guns_Pistol
+
+            percent = CalculatePercentage(SMGAmmoMax, SMGAmmo) / 10
+            pc = Fix(percent * 25.5)
+            pc2 = Abs(pc - 255)
+            Line (Hud(i).x1, Hud(i).y2 - (Hud(i).size / 5))-(Hud(i).x2, Hud(i).y2), _RGB32(0, 0, 0), BF
+            Line (Hud(i).x1, Hud(i).y2 - (Hud(i).size / 5))-(Hud(i).x1 + (percent * 6.4), Hud(i).y2), _RGB32(pc2, pc, 0), BF
+        End If
+        If i = 3 Then
+            _PutImage ((Hud(i).x + Hud(i).xm) - (_Width(Guns_Shotgun) / 4), (Hud(i).y + Hud(i).ym) - (_Height(Guns_Shotgun) / 4))-(Hud(i).x + Hud(i).xm + (_Width(Guns_Shotgun) / 4), Hud(i).y + Hud(i).ym + (_Height(Guns_Shotgun) / 4)), Guns_Shotgun
+            percent = CalculatePercentage(ShotgunAmmoMax, ShotgunAmmo) / 10
+            pc = Fix(percent * 25.5)
+            pc2 = Abs(pc - 255)
+            Line (Hud(i).x1, Hud(i).y2 - (Hud(i).size / 5))-(Hud(i).x2, Hud(i).y2), _RGB32(0, 0, 0), BF
+            Line (Hud(i).x1, Hud(i).y2 - (Hud(i).size / 5))-(Hud(i).x1 + (percent * 6.4), Hud(i).y2), _RGB32(pc2, pc, 0), BF
+
+        End If
+        If i = 4 Then
+            _PutImage (Hud(i).x1, Hud(i).y1)-(Hud(i).x2, Hud(i).y2), Guns_SMG
+            percent = CalculatePercentage(SMGAmmoMax, SMGAmmo) / 10
+            pc = Fix(percent * 25.5)
+            pc2 = Abs(pc - 255)
+            Line (Hud(i).x1, Hud(i).y2 - (Hud(i).size / 5))-(Hud(i).x2, Hud(i).y2), _RGB32(0, 0, 0), BF
+            Line (Hud(i).x1, Hud(i).y2 - (Hud(i).size / 5))-(Hud(i).x1 + (percent * 6.4), Hud(i).y2), _RGB32(pc2, pc, 0), BF
+
+        End If
+        If i = 5 Then
+            _PutImage (Hud(i).x1, Hud(i).y1)-(Hud(i).x2, Hud(i).y2), Guns_Grenade
+            percent = CalculatePercentage(GrenadeAmmoMax, GrenadeAmmo) / 10
+            pc = Fix(percent * 25.5)
+            pc2 = Abs(pc - 255)
+            Line (Hud(i).x1, Hud(i).y2 - (Hud(i).size / 5))-(Hud(i).x2, Hud(i).y2), _RGB32(0, 0, 0), BF
+            Line (Hud(i).x1, Hud(i).y2 - (Hud(i).size / 5))-(Hud(i).x1 + (percent * 6.4), Hud(i).y2), _RGB32(pc2, pc, 0), BF
+
+        End If
+        If i = 6 Then
+            _PutImage (Hud(i).x1, Hud(i).y1)-(Hud(i).x2, Hud(i).y2), Guns_Flame
+            percent = CalculatePercentage(FlameAmmoMax, FlameAmmo) / 10
+            pc = Fix(percent * 25.5)
+            pc2 = Abs(pc - 255)
+            Line (Hud(i).x1, Hud(i).y2 - (Hud(i).size / 5))-(Hud(i).x2, Hud(i).y2), _RGB32(0, 0, 0), BF
+            Line (Hud(i).x1, Hud(i).y2 - (Hud(i).size / 5))-(Hud(i).x1 + (percent * 6.4), Hud(i).y2), _RGB32(pc2, pc, 0), BF
+
+        End If
+    End If
+Next
+FontSizeUse = 86
+Text$ = Str$(Fix(Player(1).Health))
+GoSub HudText
+If HideUI = 0 Then _PutImage (_Width - thx, _Height - thy), ImgToMenu
+Return
+
+HudText:
+_Font BegsFontSizes(FontSizeUse)
+thx = _PrintWidth(Text$)
+thy = _FontHeight(BegsFontSizes(FontSizeUse))
+If ImgToMenu <> 0 Then _FreeImage ImgToMenu
+ImgToMenu = _NewImage(thx * 3, thy * 3, 32)
+_Dest ImgToMenu
+_ClearColor _RGB32(0, 0, 0): _PrintMode _KeepBackground: _Font BegsFontSizes(FontSizeUse): Print Text$
+_Dest MainScreen
+_Font BegsFontSizes(20)
+Return
+
+
+
+
+
+GrenadeLogic:
+For i = 1 To GrenadeMax
+    If Grenade(i).visible = 0 Then GoTo EndOfGrenadeLogic
+    Grenade(i).x = Grenade(i).x + (Grenade(i).xm / 10)
+    Grenade(i).y = Grenade(i).y + (Grenade(i).ym / 10)
+    Grenade(i).z = Grenade(i).z + (Grenade(i).zm / 10)
+    If Grenade(i).z > 0 Then Grenade(i).zm = Grenade(i).zm - 2
+    If Grenade(i).z < 0 And Grenade(i).zm < 0 Then
+        _SndPlayCopy ShellSounds(Int(1 + Rnd * 3)), 0.25
+        Grenade(i).zm = Int(Grenade(i).zm * -0.5)
+        Grenade(i).xm = Int(Grenade(i).xm / 2): Grenade(i).ym = Int(Grenade(i).ym / 2)
+
+    End If
+    If Grenade(i).froozen = -1 Then
+        x1 = Fix(Grenade(i).x / Map.TileSize) - 3
+        x2 = Fix(Grenade(i).x / Map.TileSize) + 3
+        y1 = Fix(Grenade(i).y / Map.TileSize) - 3
+        y2 = Fix(Grenade(i).y / Map.TileSize) + 3
+        If x1 < 0 Then x1 = 0
+        If y1 < 0 Then y1 = 0
+        If x2 > Map.MaxWidth Then x2 = Map.MaxWidth
+        If y2 > Map.MaxHeight Then y2 = Map.MaxHeight
+
+        For x = x1 To x2
+            For y = y1 To y2
+                If Tile(x, y, 2).fragile = 1 Then
+                    For o = 1 To 5
+                        Part(LastPart).x = x * Map.TileSize + Int(Rnd * Map.TileSize): Part(LastPart).y = y * Map.TileSize + Int(Rnd * Map.TileSize): Part(LastPart).z = 2: Part(LastPart).xm = Int(Rnd * 128) - 64: Part(LastPart).ym = Int(Rnd * 128) - 64: Part(LastPart).zm = 2 + Int(Rnd * 7)
+                        Part(LastPart).froozen = -30: Part(LastPart).visible = 1600: Part(LastPart).partid = "GlassShard": Part(LastPart).playwhatsound = "Glass"
+                        Part(LastPart).rotation = Int(Rnd * 360) - 180: Part(LastPart).rotationspeed = Int(Rnd * 60) - 30: LastPart = LastPart + 1: If LastPart > ParticlesMax Then LastPart = 0
+                    Next
+                    If Tile(x, y, 2).ID = 56 Then _SndPlayCopy GlassShadder(Int(1 + Rnd * 3)), 0.4
+                    Tile(x, y, 2).ID = 0
+                    Tile(x, y, 2).solid = 0
+                    Tile(x, y, 2).rend_spritex = 0
+                    Tile(x, y, 2).rend_spritey = 0
+                End If
+
+            Next
+        Next
+        Grenade(i).visible = 0
+        Grenade(i).froozen = 0
+        Explosion Grenade(i).x, Grenade(i).y, 100, 350
+        Circle (ETSX(Grenade(i).x), ETSY(Grenade(i).y)), 200, _RGB32(255, 255, 255)
+        _SndPlay SND_Explosion
+    End If
+    If Grenade(i).froozen < 0 Then Grenade(i).froozen = Grenade(i).froozen + 1
+    If Fix(Grenade(i).z) <= 0 Then Grenade(i).z = 0
+    If Grenade(i).xm > 0 Then Grenade(i).xm = Grenade(i).xm - 1
+    If Grenade(i).ym > 0 Then Grenade(i).ym = Grenade(i).ym - 1
+    If Grenade(i).xm < 0 Then Grenade(i).xm = Grenade(i).xm + 1
+    If Grenade(i).ym < 0 Then Grenade(i).ym = Grenade(i).ym + 1
+    If Tile(Fix((Grenade(i).x + 8) / Map.TileSize), Fix(Grenade(i).y / Map.TileSize), 2).solid = 1 Then Grenade(i).xm = Grenade(i).xm * -1.1: Grenade(i).ym = 0
+    If Tile(Fix((Grenade(i).x - 8) / Map.TileSize), Fix(Grenade(i).y / Map.TileSize), 2).solid = 1 Then Grenade(i).xm = Grenade(i).xm * -1.1: Grenade(i).ym = 0
+    If Tile(Fix(Grenade(i).x / Map.TileSize), Fix((Grenade(i).y + 8) / Map.TileSize), 2).solid = 1 Then Grenade(i).xm = 0: Grenade(i).ym = Grenade(i).ym * -1.1
+    If Tile(Fix(Grenade(i).x / Map.TileSize), Fix((Grenade(i).y - 8) / Map.TileSize), 2).solid = 1 Then Grenade(i).xm = 0: Grenade(i).ym = Grenade(i).ym * -1.1
+    Grenade(i).rotation = Grenade(i).rotation + Grenade(i).rotationspeed
+    If Grenade(i).rotationspeed > 0 Then Grenade(i).rotationspeed = Grenade(i).rotationspeed - 1
+    If Grenade(i).rotationspeed < 0 Then Grenade(i).rotationspeed = Grenade(i).rotationspeed + 1
+    RotoZoom ETSX(Grenade(i).x), ETSY(Grenade(i).y), Guns_Grenade, .6 + (Grenade(i).z / 50), Grenade(i).rotation + 90
+    EndOfGrenadeLogic:
+Next
+Return
+
+
+
+
+RenderMobs:
+For i = 1 To ZombieMax
+    If Zombie(i).active = 1 Then
+        '  If debug = 1 Then
+
+        Select Case Zombie(i).special
+            Case "Runner"
+                If Debug = 1 Then Line (ETSX(Zombie(i).x1), ETSY(Zombie(i).y1))-(ETSX(Zombie(i).x2), ETSY(Zombie(i).y2)), _RGB32(255, 0, 255), BF
+                RotoZoom ETSX(Zombie(i).x), ETSY(Zombie(i).y), ZombieRunner, Zombie(i).size / 90, Zombie(i).rotation
+            Case "Brute"
+                If Debug = 1 Then Line (ETSX(Zombie(i).x1), ETSY(Zombie(i).y1))-(ETSX(Zombie(i).x2), ETSY(Zombie(i).y2)), _RGB32(255, 0, 0), BF
+                RotoZoom ETSX(Zombie(i).x), ETSY(Zombie(i).y), ZombieBrute, Zombie(i).size / 90, Zombie(i).rotation
+            Case "Slower"
+                If Debug = 1 Then Line (ETSX(Zombie(i).x1), ETSY(Zombie(i).y1))-(ETSX(Zombie(i).x2), ETSY(Zombie(i).y2)), _RGB32(64, 0, 64), BF
+                RotoZoom ETSX(Zombie(i).x), ETSY(Zombie(i).y), ZombieSlower, Zombie(i).size / 90, Zombie(i).rotation
+            Case "Bomber"
+                If Debug = 1 Then Line (ETSX(Zombie(i).x1), ETSY(Zombie(i).y1))-(ETSX(Zombie(i).x2), ETSY(Zombie(i).y2)), _RGB32(128, 128, 128), BF
+                RotoZoom ETSX(Zombie(i).x), ETSY(Zombie(i).y), ZombieBomber, Zombie(i).size / 90, Zombie(i).rotation
+            Case "Fire"
+                If Debug = 1 Then Line (ETSX(Zombie(i).x1), ETSY(Zombie(i).y1))-(ETSX(Zombie(i).x2), ETSY(Zombie(i).y2)), _RGB32(255, 128, 0), BF
+                RotoZoom ETSX(Zombie(i).x), ETSY(Zombie(i).y), ZombieFire, Zombie(i).size / 90, Zombie(i).rotation
+            Case "Biohazard"
+                If Debug = 1 Then Line (ETSX(Zombie(i).x1), ETSY(Zombie(i).y1))-(ETSX(Zombie(i).x2), ETSY(Zombie(i).y2)), _RGB32(0, 255, 0), BF
+                RotoZoom ETSX(Zombie(i).x), ETSY(Zombie(i).y), ZombieBiohazard, Zombie(i).size / 90, Zombie(i).rotation
+
+            Case "Normal"
+                If Debug = 1 Then Line (ETSX(Zombie(i).x1), ETSY(Zombie(i).y1))-(ETSX(Zombie(i).x2), ETSY(Zombie(i).y2)), _RGB32(255, 255, 128), BF
+                RotoZoom ETSX(Zombie(i).x), ETSY(Zombie(i).y), Zombie, Zombie(i).size / 90, Zombie(i).rotation
+
+        End Select
+
+
+
+
+
+
+        ' End If
+
+    End If
+Next
+Return
+
+
+ZombieAI:
+For i = 1 To ZombieMax
+    If Zombie(i).active = 1 Then
+        If Zombie(i).special <> "" And Zombie(i).DistanceFromPlayer < 900 Then
+            If Zombie(i).special = "Runner" Then If Zombie(i).tick > 0 Then Zombie(i).tick = Zombie(i).tick - 1
+            If Zombie(i).special = "Fire" Then
+                If Zombie(i).DistanceFromPlayer < 450 And Int(Rnd * 10) = 4 Then
+                    FireLast = FireLast + 1: If FireLast > FireMax Then FireLast = 1
+                    Fire(FireLast).visible = 40: Fire(FireLast).froozen = 800
+                    Fire(FireLast).x = Zombie(i).x + (Int(Rnd * 8) - 4): Fire(FireLast).y = Zombie(i).y + (Int(Rnd * 8) - 4)
+                    Fire(FireLast).txt = 1: speed = (90 + Int(Rnd * 80))
+                    angle = Zombie(i).rotation + Int(Rnd * 10) - 5: Fire(FireLast).xm = Sin(angle * PIDIV180) * speed
+                    Fire(FireLast).ym = -Cos(angle * PIDIV180) * speed
+                End If
+                If Int(Rnd * 40) = 23 Then
+                    FireLast = FireLast + 1: If FireLast > FireMax Then FireLast = 1
+                    Fire(FireLast).x = Zombie(i).x + (Int(Rnd * 30) - 15) * 2
+                    Fire(FireLast).txt = 1
+                    Fire(FireLast).y = Zombie(i).y + (Int(Rnd * 30) - 15) * 2
+                    If Distance(Fire(FireLast).x, Fire(FireLast).y, Player(1).x, Player(1).y) > 80 Then
+                        Fire(FireLast).xm = Int(Rnd * 100) - 50: Fire(FireLast).ym = Int(Rnd * 100) - 50
+                        If Int(Rnd * 100) = 54 Then
+                            Fire(FireLast).froozen = 500 + Int(Rnd * 250): Fire(FireLast).visible = 10
+                        Else
+                            Fire(FireLast).froozen = 70 + Int(Rnd * 120): Fire(FireLast).visible = 10
+                        End If
+                    End If
+                End If
+            End If
+            If Zombie(i).special = "Bomber" Then
+                If Zombie(i).DistanceFromPlayer < 400 And Zombie(i).DistanceFromPlayer > 6 Then
+                    Zombie(i).SpecialDelay = Zombie(i).SpecialDelay + 1
+                    If Zombie(i).SpecialDelay < 120 Then
+                        Zombie(i).size = Zombie(i).size * 1.001: If Zombie(i).sizeFirst + 20 < Zombie(i).size Then Zombie(i).size = Zombie(i).sizeFirst + 20
+                        ' Zombie(i).health = (Zombie(i).health / 1.1) - 0.1
+                    End If
+                    If Zombie(i).SpecialDelay > 120 Then
+                        Zombie(i).size = Zombie(i).size * 1.05: If Zombie(i).size > 120 Then Zombie(i).size = 120
+                        Zombie(i).health = (Zombie(i).health / 1.1) - 0.1
+                    End If
+
+
+
+                Else
+                    If Zombie(i).SpecialDelay > 0 Then Zombie(i).SpecialDelay = Zombie(i).SpecialDelay - 1
+                    dif = Zombie(i).sizeFirst - Zombie(i).size
+                    Zombie(i).size = Zombie(i).size + (dif / 10)
+                    dif = Zombie(i).healthFirst - Zombie(i).health
+                    Zombie(i).health = Zombie(i).health + (dif / 10)
+
+
+                End If
+            End If
+
+
+        End If
+
+        'Burn
+        If Zombie(i).special <> "Fire" Then
+            If Zombie(i).onfire > 0 Then
+                Zombie(i).onfire = Zombie(i).onfire - 1
+                If Int(Rnd * 6) = 2 Then
+                    Zombie(i).health = Zombie(i).health - 2
+                    FireLast = FireLast + 1: If FireLast > FireMax Then FireLast = 1
+                    Fire(FireLast).visible = 6
+                    Fire(FireLast).froozen = 20
+                    Fire(FireLast).txt = 0
+                    Fire(FireLast).x = Zombie(i).x + (Int(Rnd * 30) - 15) * 2
+                    Fire(FireLast).y = Zombie(i).y + (Int(Rnd * 30) - 15) * 2
+                    Fire(FireLast).xm = (Zombie(i).xm / 10) + (Int(Rnd * 30) - 15) * 2
+                    Fire(FireLast).ym = (Zombie(i).ym / 10) + (Int(Rnd * 30) - 15) * 2
+                End If
+            End If
+        End If
+
+        If Zombie(i).DamageTaken > 0 Then
+            For S = 1 To Int(Zombie(i).DamageTaken / 4)
+                SpawnBloodParticle Zombie(i).x, Zombie(i).y, Int(Rnd * 360) - 180, Steps, "green"
+            Next
+            Zombie(i).health = Zombie(i).health - Zombie(i).DamageTaken: Zombie(i).DamageTaken = 0
+        End If
+
+        If Zombie(i).tick > 0 Then Zombie(i).tick = Zombie(i).tick - 1
+        Zombie(i).x = Zombie(i).x + Zombie(i).xm / 100: Zombie(i).y = Zombie(i).y + Zombie(i).ym / 100
+        Zombie(i).x1 = Zombie(i).x - Zombie(i).size: Zombie(i).x2 = Zombie(i).x + Zombie(i).size: Zombie(i).y1 = Zombie(i).y - Zombie(i).size: Zombie(i).y2 = Zombie(i).y + Zombie(i).size
+
+        Zombie(i).xm = Zombie(i).xm + Fix(Sin(Zombie(i).rotation * PIDIV180) * Zombie(i).speeding)
+        Zombie(i).ym = Zombie(i).ym + Fix(-Cos(Zombie(i).rotation * PIDIV180) * Zombie(i).speeding)
+        If Zombie(i).xm > Zombie(i).maxspeed Then Zombie(i).xm = Zombie(i).maxspeed
+        If Zombie(i).ym > Zombie(i).maxspeed Then Zombie(i).ym = Zombie(i).maxspeed
+        If Zombie(i).xm < -Zombie(i).maxspeed Then Zombie(i).xm = -Zombie(i).maxspeed
+        If Zombie(i).ym < -Zombie(i).maxspeed Then Zombie(i).ym = -Zombie(i).maxspeed
+        Zombie(i).xm = Zombie(i).xm / (1.010 + (Zombie(i).speeding / 2000))
+        Zombie(i).ym = Zombie(i).ym / (1.010 + (Zombie(i).speeding / 2000))
+        If CollisionWithWallsEntity(Zombie(i)) Then
+        End If
+        If Zombie(i).tick = 0 Then
+            If Int(Rnd * 60) = 27 And Zombie(i).DistanceFromPlayer < 400 Then _SndPlayCopy ZombieWalk(Int(Rnd * 4) + 1), 0.08
+            'For o = 1 To ZombieMax
+            o = 1: Do
+                o = o + 1
+                If i <> o And Zombie(o).active = 1 Then
+                    dist = Distance(Zombie(i).x, Zombie(i).y, Zombie(o).x, Zombie(o).y)
+                    If dist < Zombie(i).size Then
+                        dx = Zombie(i).x - Zombie(o).x: dy = Zombie(i).y - Zombie(o).y
+                        RotDist = ATan2(dy, dx) ' Angle in radians
+                        RotDist = (RotDist * 180 / PI) + 90
+                        If RotDist > 180 Then RotDist = RotDist - 179.9
+                        Zombie(i).xm = Zombie(i).xm - Fix(Sin(RotDist * PIDIV180) * 250)
+                        Zombie(i).ym = Zombie(i).ym - Fix(-Cos(RotDist * PIDIV180) * 250)
+
+                    End If
+                End If
+                'If o = ZombieMax Then Exit Do
+            Loop While o <> ZombieMax
+            'Next
+
+            Zombie(i).tick = DefZombie.tickrate + (Int(Rnd * 20) - 10)
+            dx = Zombie(i).x - Player(1).x: dy = Zombie(i).y - Player(1).y
+            Zombie(i).rotation = ATan2(dy, dx) ' Angle in radians
+            Zombie(i).rotation = (Zombie(i).rotation * 180 / PI) + 90 + (-20 + Int(Rnd * 40))
+            If Zombie(i).rotation > 180 Then Zombie(i).rotation = Zombie(i).rotation - 179.9
+            Zombie(i).DistanceFromPlayer = Int(Distance(Zombie(i).x, Zombie(i).y, Player(1).x, Player(1).y))
+            If Zombie(i).DistanceFromPlayer < (Zombie(i).size * 1.8) Then
+                If Zombie(i).attacking = 0 Then Zombie(i).attacking = Int(Zombie(i).knockback / 3)
+                If Zombie(i).attacking = Int(Zombie(i).knockback / 3) Then
+                    Zombie(i).xm = Zombie(i).xm / 15
+                    Zombie(i).ym = Zombie(i).ym / 15
+                    Player(1).DamageToTake = Int(Rnd * (DefZombie.maxdamage - DefZombie.mindamage + 1)) + DefZombie.mindamage
+                    PlayerTakeDamage Player(1), Zombie(i).x, Zombie(i).y, Player(1).DamageToTake, Zombie(i).knockback
+                    Player(1).DamageToTake = 0
+                End If
+            End If
+            If Zombie(i).attacking > 0 Then Zombie(i).attacking = Zombie(i).attacking - 1
+        End If
+        If Zombie(i).health <= 0 Then
+            Zombie(i).SpecialDelay = 0
+            '                                 ------------------- Ammo Dropping --------------------
+            If Int(Rnd * 3) + 1 = 2 Then
+                If Zombie(i).special = "Normal" Then
+                    Rand = Int(Rnd * 2) + 1
+                    If Rand = 1 Then
+                        SpawnBloodParticle Zombie(i).x, Zombie(i).y, Int(Rnd * 360) - 180, 5, "ShotgunAmmo"
+                    Else
+                        SpawnBloodParticle Zombie(i).x, Zombie(i).y, Int(Rnd * 360) - 180, 5, "PistolAmmo"
+                    End If
+                End If
+                If Zombie(i).special = "Fire" Then SpawnBloodParticle Zombie(i).x, Zombie(i).y, Int(Rnd * 360) - 180, 5, "GasAmmo"
+                If Zombie(i).special = "Bomber" Then SpawnBloodParticle Zombie(i).x, Zombie(i).y, Int(Rnd * 360) - 180, 5, "GrenadeAmmo"
+                If Zombie(i).special = "Brute" Then
+                    Rand = Int(Rnd * 5)
+                    For b = 1 To Rand
+                        SpawnBloodParticle Zombie(i).x, Zombie(i).y, Int(Rnd * 360) - 180, 7, "ShotgunAmmo"
+                        SpawnBloodParticle Zombie(i).x, Zombie(i).y, Int(Rnd * 360) - 180, 7, "PistolAmmo"
+                    Next
+                End If
+            End If
+
+
+
+            If Zombie(i).special = "Bomber" Then
+
+                Explosion Zombie(i).x, Zombie(i).y, 100, 400: _SndPlay SND_Explosion
+                For b = 1 To 80
+                    SpawnBloodParticle Zombie(i).x, Zombie(i).y, Int(Rnd * 360) - 180, Int(Rnd * 100), "green"
+                Next
+            End If
+            If Zombie(i).health <= -30 Then SpawnBloodParticle Zombie(i).x, Zombie(i).y, Int(Rnd * 360) - 180, 5, "GibSkull"
+            Zombie(i).active = 0
+            Zombie(i).onfire = 0
+            WaveBudget = WaveBudget - 1
+            For o = 1 To 10
+                SpawnBloodParticle Zombie(i).x, Zombie(i).y, Int(Rnd * 360) - 180, Steps, "green"
+                If Zombie(i).health <= -30 And Int(Rnd * 3) = 2 Then SpawnBloodParticle Zombie(i).x, Zombie(i).y, Int(Rnd * 360) - 180, 5, "GibBone"
+                If Zombie(i).health >= -30 And Int(Rnd * 8) = 2 Then SpawnBloodParticle Zombie(i).x, Zombie(i).y, Int(Rnd * 360) - 180, 5, "GibBone"
+            Next
+        End If
+        If Zombie(i).x < 0 Or Zombie(i).y < 0 Then
+            Zombie(i).x = 100: Zombie(i).y = 100: Zombie(i).ym = 0: Zombie(i).xm = 0
+            Zombie(i).health = 0
+
+            Beep: Print "Zombie(" + Str$(i) + ") Out of bounds!!!!!!!!!!!!!!!!"
+            _Display
+            Beep: Beep
+            _Delay 0.6
+        End If
+    End If
+
+Next
+Return
+
+ParticleLogic:
+For i = 1 To ParticlesMax
+    If Part(i).visible = 0 Then GoTo EndOfParticleLogic
+    If Part(i).playwhatsound = "Blood" And Part(i).froozen = 0 Then
+        dist = Distance(Player(1).x, Player(1).y, Part(i).x, Part(i).y)
+        If dist > 900 Then Part(i).visible = Part(i).visible - 1
+        If dist < 600 And Player(1).Health > 0 Then
+
+            If dist < 25 And Part(i).partid = "BloodSplat" Then Part(i).visible = 0: Part(i).xm = 0: Part(i).ym = 0: Part(i).playwhatsound = "": Player(1).Health = Player(1).Health + 0.1: GoTo EndOfParticleLogic
+            If dist < 25 And Part(i).partid = "PistolAmmo" Then SMGAmmo = SMGAmmo + 30: Part(i).playwhatsound = "": Part(i).visible = 0: Part(i).xm = 0: Part(i).ym = 0: GoTo EndOfParticleLogic
+            If dist < 25 And Part(i).partid = "ShotgunAmmo" Then ShotgunAmmo = ShotgunAmmo + 10: Part(i).playwhatsound = "": Part(i).visible = 0: Part(i).xm = 0: Part(i).ym = 0: GoTo EndOfParticleLogic
+            If dist < 25 And Part(i).partid = "GasAmmo" Then FlameAmmo = FlameAmmo + 20: Part(i).playwhatsound = "": Part(i).visible = 0: Part(i).xm = 0: Part(i).ym = 0: GoTo EndOfParticleLogic
+            If dist < 25 And Part(i).partid = "GrenadeAmmo" Then GrenadeAmmo = GrenadeAmmo + 2: Part(i).playwhatsound = "": Part(i).visible = 0: Part(i).xm = 0: Part(i).ym = 0: GoTo EndOfParticleLogic
+            dx = Player(1).x - Part(i).x: dy = Player(1).y - Part(i).y
+            Part(i).rotation = ATan2(dy, dx) ' Angle in radians
+            Part(i).rotation = (Part(i).rotation * 180 / PI) + 90
+            If Part(i).rotation > 180 Then Part(i).rotation = Part(i).rotation - 179.9
+            Part(i).xm = Part(i).xm / 1.015
+            Part(i).ym = Part(i).ym / 1.015
+            Part(i).xm = Part(i).xm + -Sin(Part(i).rotation * PIDIV180) * 5 / (dist / 150)
+            Part(i).ym = Part(i).ym + Cos(Part(i).rotation * PIDIV180) * 5 / (dist / 150)
+            Part(i).x = Part(i).x + (Part(i).xm / 10)
+            Part(i).y = Part(i).y + (Part(i).ym / 10)
+            Part(i).z = 3 / (dist / 70)
+            If Part(i).z > 15 Then Part(i).z = 15
+        End If
+    End If
+
+    If Part(i).froozen <> 0 Then
+        Part(i).x = Part(i).x + (Part(i).xm / 10)
+        Part(i).y = Part(i).y + (Part(i).ym / 10)
+        Part(i).z = Part(i).z + (Part(i).zm / 10)
+        If Part(i).z > 0 Then Part(i).zm = Part(i).zm - 1
+        If Part(i).z < 0 And Part(i).zm < 0 Then
+            If Part(i).playwhatsound = "ShotgunShell" Then
+                _SndPlayCopy ShellSounds(Int(1 + Rnd * 3)), 0.2
+                Part(i).zm = Int(Part(i).zm * -0.9)
+                Part(i).xm = Int(Part(i).xm / 2): Part(i).ym = Int(Part(i).ym / 2)
+                Part(i).froozen = -200
+            End If
+
+            If Part(i).playwhatsound = "PistolShell" Then
+                pistsndold = pistsnd
+                pistsnd = Int(1 + Rnd * 3)
+                If pistsnd = pistsndold Then pistsnd = Int(1 + Rnd * 3)
+                _SndPlayCopy PistolShellSounds(pistsnd), 0.25
+                Part(i).zm = Int(Part(i).zm * -0.9)
+                Part(i).xm = Int(Part(i).xm / 2): Part(i).ym = Int(Part(i).ym / 2)
+                Part(i).froozen = -200
+            End If
+
+            If Part(i).playwhatsound = "Blood" Then
+                _SndPlayCopy BloodSounds(Int(1 + Rnd * 6)), 0.1
+                Part(i).zm = Int(Part(i).zm * -0.7)
+                Part(i).xm = Int(Part(i).xm / 1.4): Part(i).ym = Int(Part(i).ym / 1.4)
+                Part(i).froozen = -200
+            End If
+
+            If Part(i).playwhatsound = "Glass" Then
+                _SndPlayCopy GlassSound(Int(1 + Rnd * 4)), 0.2
+                Part(i).zm = Int(Part(i).zm * -0.9)
+                Part(i).xm = Int(Part(i).xm / 2): Part(i).ym = Int(Part(i).ym / 2)
+                Part(i).froozen = -200
+            End If
+        End If
+        If Part(i).froozen < 0 Then Part(i).froozen = Part(i).froozen + 1
+        If Fix(Part(i).z) <= 0 Then Part(i).z = 0
+        If Part(i).xm > 0 Then Part(i).xm = Part(i).xm - 1
+        If Part(i).ym > 0 Then Part(i).ym = Part(i).ym - 1
+        If Part(i).xm < 0 Then Part(i).xm = Part(i).xm + 1
+        If Part(i).ym < 0 Then Part(i).ym = Part(i).ym + 1
+
+        x = Fix(Part(i).x / Map.TileSize)
+        y = Fix(Part(i).y / Map.TileSize)
+        If x < 0 Then x = 0
+        If y < 0 Then y = 0
+        If x > Map.MaxWidth Then x = Map.MaxWidth
+        If y > Map.MaxHeight Then y = Map.MaxHeight
+
+        If Tile(x, y, 2).solid = 1 Then Part(i).xm = 0: Part(i).ym = 0
+        Part(i).rotation = Part(i).rotation + Part(i).rotationspeed
+        If Part(i).rotationspeed > 0 Then Part(i).rotationspeed = Part(i).rotationspeed - 1
+        If Part(i).rotationspeed < 0 Then Part(i).rotationspeed = Part(i).rotationspeed + 1
+    End If
+    If Not Part(i).playwhatsound = "Blood" Then Part(i).visible = Part(i).visible - 1
+    '_PutImage (ETSX(Part(i).x), ETSY(Part(i).y)), Particle_Shotgun_Shell
+    If Part(i).visible > 0 Then
+        If Part(i).partid = "PistolShell" Then RotoZoom ETSX(Part(i).x), ETSY(Part(i).y), Particle_Pistol_Shell, 0.3 + (Part(i).z / 4), Part(i).rotation
+        If Part(i).partid = "ShotgunShell" Then RotoZoom ETSX(Part(i).x), ETSY(Part(i).y), Particle_Shotgun_Shell, 0.3 + (Part(i).z / 4), Part(i).rotation
+        If Part(i).partid = "WallShot" Then RotoZoom ETSX(Part(i).x), ETSY(Part(i).y), WallShot, 0.8 + (Part(i).z / 4), Part(i).rotation
+        If Part(i).partid = "Smoke" Then RotoZoom ETSX(Part(i).x), ETSY(Part(i).y), Particle_Smoke, 0.05 + (Part(i).z / 4), Part(i).rotation
+        If Part(i).partid = "Explosion" Then RotoZoom ETSX(Part(i).x), ETSY(Part(i).y), Particle_Explosion, 0.1 + (Part(i).z / 4), Part(i).rotation
+        If Part(i).partid = "BloodSplat" Then
+            If Part(i).BloodColor = "green" Then RotoZoom ETSX(Part(i).x), ETSY(Part(i).y), BloodsplatGreen, 1 + (Part(i).z / 4), Part(i).rotation
+            If Part(i).BloodColor = "red" Then RotoZoom ETSX(Part(i).x), ETSY(Part(i).y), BloodsplatRed, 1 + (Part(i).z / 4), Part(i).rotation
+
+        End If
+        If Part(i).partid = "GlassShard" Then RotoZoom ETSX(Part(i).x), ETSY(Part(i).y), GlassShard, 1 + (Part(i).z / 2), Part(i).rotation
+        If Part(i).partid = "GibSkull" Then RotoZoom ETSX(Part(i).x), ETSY(Part(i).y), Gib_Skull, 2 + (Part(i).z / 3), Part(i).rotation
+        If Part(i).partid = "GibBone" Then RotoZoom ETSX(Part(i).x), ETSY(Part(i).y), Gib_Bone, 2 + (Part(i).z / 3), Part(i).rotation
+        If Part(i).partid = "PistolAmmo" Then RotoZoom ETSX(Part(i).x), ETSY(Part(i).y), PistolShellAmmo, 1 + (Part(i).z / 3), Part(i).rotation
+        If Part(i).partid = "GrenadeAmmo" Then RotoZoom ETSX(Part(i).x), ETSY(Part(i).y), Guns_Grenade, 1 + (Part(i).z / 3), Part(i).rotation
+        If Part(i).partid = "ShotgunAmmo" Then RotoZoom ETSX(Part(i).x), ETSY(Part(i).y), ShellShotgunAmmo, 1 + (Part(i).z / 3), Part(i).rotation
+        If Part(i).partid = "GasAmmo" Then RotoZoom ETSX(Part(i).x), ETSY(Part(i).y), GasCanAmmo, 1 + (Part(i).z / 3), Part(i).rotation
+
+    End If
+    EndOfParticleLogic:
+Next
+Return
+
+
+
+GunCode:
+If WeaponHeat > 0 Then WeaponHeat = WeaponHeat - 1
+If WeaponHeat > 45 Then WeaponHeat = 45
+GoSub LoadingFromSlots
+For i = 1 To 1
+    o = -1
+    If GunDisplay(i).visible = 1 Then
+        o = o + 1
+        GunDisplay(i).x = ((PlayerMember(i + o).x + PlayerMember(i * 2).x) / 2) 'Player(i).x + (Sin(Player(i).Rotation * PIDIV180) * 38)
+        GunDisplay(i).y = ((PlayerMember(i + o).y + PlayerMember(i * 2).y) / 2) 'Player(i).y + (-Cos(Player(i).Rotation * PIDIV180) * 38)
+        GunDisplay(i).x = GunDisplay(i).x + GunDisplay(i).xm
+        GunDisplay(i).y = GunDisplay(i).y + GunDisplay(i).ym
+        GunDisplay(i).xm = Int(GunDisplay(i).xm / 2)
+        GunDisplay(i).ym = Int(GunDisplay(i).ym / 2)
+        If Player(1).shooting = 0 Then FlameSoundPlaying = 0: _SndStop FlameThrowerSound
+        GoSub Shooting
+        If Player(1).shooting = 1 Then
+            GunDisplay(i).xm = -Int(Sin(GunDisplay(i).rotation * PIDIV180) * GunForce * 2)
+            GunDisplay(i).ym = -Int(-Cos(GunDisplay(i).rotation * PIDIV180) * GunForce * 2)
+            If Aiming = 0 Then
+                CameraXM = CameraXM + -Int(Sin(GunDisplay(i).rotation * PIDIV180) * GunForce)
+                CameraYM = CameraYM + -Int(-Cos(GunDisplay(i).rotation * PIDIV180) * GunForce)
+            End If
+            If Aiming = 1 Then
+                CameraXM = CameraXM + -Int(Sin(GunDisplay(i).rotation * PIDIV180) * (GunForce / 2))
+                CameraYM = CameraYM + -Int(-Cos(GunDisplay(i).rotation * PIDIV180) * (GunForce / 2))
+            End If
+            Hud(1).xm = Hud(1).xm - Int(Sin(GunDisplay(i).rotation * PIDIV180) * GunForce) * 5
+            Hud(1).ym = Hud(1).ym - Int(-Cos(GunDisplay(i).rotation * PIDIV180) * GunForce) * 2
+            Hud(HighestHud).xm = Hud(HighestHud).xm - Int(Sin(GunDisplay(i).rotation * PIDIV180) * GunForce)
+            Hud(HighestHud).ym = Hud(HighestHud).ym - Int(-Cos(GunDisplay(i).rotation * PIDIV180) * GunForce)
+
+        End If
+        dx = Player(i).x - GunDisplay(i).x: dy = Player(i).y - GunDisplay(i).y
+        GunDisplay(i).rotation = ATan2(dy, dx) ' Angle in radians
+        GunDisplay(i).rotation = (GunDisplay(i).rotation * 180 / PI) + 90
+        If GunDisplay(i).rotation > 180 Then GunDisplay(i).rotation = GunDisplay(i).rotation - 180
+        'GunDisplay(i).rotation = Player(i).Rotation + 90
+        If Debug = 1 Then Line (ETSX(GunDisplay(i).x - 16), ETSY(GunDisplay(i).y - 16))-(ETSX(GunDisplay(i).x + 16), ETSY(GunDisplay(i).y + 16)), _RGBA32(255, 255, 255, 75), BF
+        If GunDisplay(i).wtype = 1 Then RotoZoom ETSX(GunDisplay(i).x), ETSY(GunDisplay(i).y), Guns_Pistol, .3, GunDisplay(i).rotation + 90
+        If GunDisplay(i).wtype = 2 Then RotoZoom ETSX(GunDisplay(i).x), ETSY(GunDisplay(i).y), Guns_Shotgun, .45, GunDisplay(i).rotation + 90
+        If GunDisplay(i).wtype = 3 Then RotoZoom ETSX(GunDisplay(i).x), ETSY(GunDisplay(i).y), Guns_SMG, .5, GunDisplay(i).rotation + 90
+        If GunDisplay(i).wtype = 4 Then RotoZoom ETSX(GunDisplay(i).x), ETSY(GunDisplay(i).y), Guns_Grenade, .6, GunDisplay(i).rotation + 90
+        If GunDisplay(i).wtype = 5 Then RotoZoom ETSX(GunDisplay(i).x), ETSY(GunDisplay(i).y), Guns_Flame, .6, GunDisplay(i).rotation + 90
+    End If
+Next
+Return
+
+Shooting:
+If Mouse.click And ShootDelay = 0 And PlayerCantMove = 0 Then
+    Player(1).shooting = 1
+    If GunDisplay(1).wtype = 1 And SMGAmmo = 0 Then
+        Player(1).shooting = 0
+
+    End If
+    If GunDisplay(1).wtype = 2 And ShotgunAmmo = 0 Then
+        Player(1).shooting = 0
+
+    End If
+    If GunDisplay(1).wtype = 3 And SMGAmmo = 0 Then
+        Player(1).shooting = 0
+
+    End If
+    If GunDisplay(1).wtype = 4 And GrenadeAmmo = 0 Then
+        Player(1).shooting = 0
+
+    End If
+    If GunDisplay(1).wtype = 5 And FlameAmmo = 0 Then
+        Player(1).shooting = 0
+        _SndStop FlameThrowerSound
+    End If
+
+
+    If GunDisplay(1).wtype = 1 And SMGAmmo > 0 Then
+        _SndPlayCopy Guns_Sound_PistolShot, 0.3: If raycasting(GunDisplay(1).x, GunDisplay(1).y, GunDisplay(1).rotation + (Int(Rnd * 6) - 3), 9, 1) Then Beep
+        Line (ETSX(GunDisplay(1).x), ETSY(GunDisplay(1).y))-(ETSX(Ray.x), ETSY(Ray.y)), _RGB32(255, 0, 0)
+        ShootDelay = 18: GunForce = 10
+        Part(LastPart).x = GunDisplay(1).x: Part(LastPart).y = GunDisplay(1).y: Part(LastPart).z = 2 + Int(Rnd * 2)
+        Part(LastPart).xm = Int(Rnd * 80) - 40
+        Part(LastPart).ym = Int(Rnd * 80) - 40
+        Part(LastPart).zm = 2 + Int(Rnd * 4)
+        Part(LastPart).froozen = 12: Part(LastPart).visible = 800
+        Part(LastPart).partid = "PistolShell": Part(LastPart).playwhatsound = "PistolShell"
+        Part(LastPart).rotation = Int(Rnd * 360) - 180
+        Part(LastPart).rotationspeed = Int(Rnd * 60) - 30
+        LastPart = LastPart + 1: If LastPart > ParticlesMax Then LastPart = 0
+    End If
+
+    If GunDisplay(1).wtype = 2 And ShotgunAmmo > 0 Then
+        _SndPlayCopy Guns_Sound_ShotgunShot, 0.3: GunForce = 50
+        ShotgunAmmo = ShotgunAmmo - 1
+        For S = 1 To 5
+            If raycasting(GunDisplay(1).x, GunDisplay(1).y, GunDisplay(1).rotation - (Int(Rnd * 20) - 10), 9, 1) Then Beep
+            Line (ETSX(GunDisplay(1).x), ETSY(GunDisplay(1).y))-(ETSX(Ray.x), ETSY(Ray.y)), _RGB32(255, 0, 0)
+        Next
+        ShootDelay = 50
+        Part(LastPart).x = GunDisplay(1).x: Part(LastPart).y = GunDisplay(1).y: Part(LastPart).z = 3 + Int(Rnd * 2)
+        Part(LastPart).xm = Int(Rnd * 120) - 60: Part(LastPart).ym = Int(Rnd * 120) - 60: Part(LastPart).zm = 2 + Int(Rnd * 4)
+        Part(LastPart).froozen = 12: Part(LastPart).visible = 800
+        Part(LastPart).partid = "ShotgunShell": Part(LastPart).playwhatsound = "ShotgunShell"
+        Part(LastPart).rotation = Int(Rnd * 360) - 180
+        Part(LastPart).rotationspeed = Int(Rnd * 60) - 30
+        LastPart = LastPart + 1: If LastPart > ParticlesMax Then LastPart = 0
+    End If
+
+    If GunDisplay(1).wtype = 3 And SMGAmmo > 0 Then
+        _SndPlayCopy SMGSounds(1 + Int(Rnd * 3)), 0.125
+        SMGAmmo = SMGAmmo - 1: GunForce = 13
+        WeaponHeat = WeaponHeat + 4
+        If raycasting(GunDisplay(1).x, GunDisplay(1).y, GunDisplay(1).rotation + ((Int(Rnd * Int(WeaponHeat / 2)) - Int(WeaponHeat / 4)) + Int(Rnd * 10) - 5), 6, 1) Then Beep
+
+        Line (ETSX(GunDisplay(1).x), ETSY(GunDisplay(1).y))-(ETSX(Ray.x), ETSY(Ray.y)), _RGB32(255, 0, 0): ShootDelay = 6
+        Part(LastPart).x = GunDisplay(1).x: Part(LastPart).y = GunDisplay(1).y: Part(LastPart).z = 2 + Int(Rnd * 2)
+        Part(LastPart).xm = Int(Rnd * 120) - 60: Part(LastPart).ym = Int(Rnd * 120) - 60: Part(LastPart).zm = 1 + Int(Rnd * 5)
+        Part(LastPart).froozen = 12: Part(LastPart).visible = 800
+        Part(LastPart).partid = "PistolShell": Part(LastPart).playwhatsound = "PistolShell"
+        Part(LastPart).rotation = Int(Rnd * 360) - 180
+        Part(LastPart).rotationspeed = Int(Rnd * 60) - 30
+        LastPart = LastPart + 1: If LastPart > ParticlesMax Then LastPart = 0
+    End If
+
+
+    If GunDisplay(1).wtype = 4 And GrenadeAmmo > 0 Then
+        GrenadeAmmo = GrenadeAmmo - 1
+        ShootDelay = 30
+        GunForce = 35
+        'LastGrenade = LastGrenade + 1
+        LastGrenade = LastGrenade + 1: If LastGrenade > GrenadeMax Then LastGrenade = 1
+        Grenade(LastGrenade).x = GunDisplay(1).x
+        Grenade(LastGrenade).y = GunDisplay(1).y
+        Grenade(LastGrenade).z = 15
+        Force = Distance(Mouse.x, Mouse.y, _Width / 2, _Height / 2) / 3: If Force > 200 Then Force = 200
+        Grenade(LastGrenade).xm = Sin(GunDisplay(1).rotation * PIDIV180) * Force
+        Grenade(LastGrenade).ym = -Cos(GunDisplay(1).rotation * PIDIV180) * Force
+        Grenade(LastGrenade).zm = 15 + Int(Rnd * 20)
+        Grenade(LastGrenade).rotation = -5 + Int(Rnd * 10)
+        Grenade(LastGrenade).rotationspeed = -30 + Int(Rnd * 15)
+        Grenade(LastGrenade).visible = 1
+        Grenade(LastGrenade).froozen = -160
+    End If
+
+    If GunDisplay(1).wtype = 5 And FlameAmmo > 0 Then
+
+        If FlameSoundPlaying = 0 Then _SndVol FlameThrowerSound, 0.09: _SndLoop FlameThrowerSound
+        FlameSoundPlaying = 1
+        FlameAmmo = FlameAmmo - 1
+        ShootDelay = 2
+        GunForce = 6
+        FireLast = FireLast + 1: If FireLast > FireMax Then FireLast = 1
+        Fire(FireLast).visible = 2
+        Fire(FireLast).froozen = 100
+        Fire(FireLast).txt = 0
+        Fire(FireLast).x = GunDisplay(1).x + (Int(Rnd * 8) - 4)
+        Fire(FireLast).y = GunDisplay(1).y + (Int(Rnd * 8) - 4)
+
+        speed = (70 + Int(Rnd * 80))
+        angle = GunDisplay(1).rotation + Int(Rnd * 40) - 20
+        Fire(FireLast).xm = Sin(angle * PIDIV180) * speed
+        Fire(FireLast).ym = -Cos(angle * PIDIV180) * speed
+    End If
+
+
+
+
+
+End If
+Return
+
+LoadingFromSlots:
+'If _KeyDown(49) Then WantSlot = 2
+'If _KeyDown(50) Then WantSlot = 3
+'If _KeyDown(51) Then WantSlot = 4
+If HighestHud = 2 Then
+    GunDisplay(1).wtype = 1
+    PlayerMember(1).angleanim = -36: PlayerMember(1).distanim = 40
+    PlayerMember(2).angleanim = 36: PlayerMember(2).distanim = 40
+
+End If
+
+If HighestHud = 3 Then
+    GunDisplay(1).wtype = 2
+    PlayerMember(1).angleanim = -29: PlayerMember(1).distanim = 67
+    PlayerMember(2).angleanim = 50: PlayerMember(2).distanim = 42
+End If
+If HighestHud = 4 Then
+    GunDisplay(1).wtype = 3
+    PlayerMember(1).angleanim = -29: PlayerMember(1).distanim = 67
+    PlayerMember(2).angleanim = 50: PlayerMember(2).distanim = 42
+End If
+
+If HighestHud = 5 Then
+    GunDisplay(1).wtype = 4
+    PlayerMember(1).angleanim = -29: PlayerMember(1).distanim = 67
+    PlayerMember(2).angleanim = 50: PlayerMember(2).distanim = 42
+End If
+
+If HighestHud = 6 Then
+    GunDisplay(1).wtype = 5
+    PlayerMember(1).angleanim = -29: PlayerMember(1).distanim = 67
+    PlayerMember(2).angleanim = 50: PlayerMember(2).distanim = 42
+End If
+
+
+Return
+
+
+
+HandsCode:
+'Xbe and 'Ybe
+ArmLeftOrigin = Player(1).Rotation + 90
+ArmRightOrigin = Player(1).Rotation - 90
+PlayerMember(1).xo = Sin(ArmLeftOrigin * PIDIV180)
+PlayerMember(1).yo = -Cos(ArmLeftOrigin * PIDIV180)
+PlayerMember(2).xo = Sin(ArmRightOrigin * PIDIV180)
+PlayerMember(2).yo = -Cos(ArmRightOrigin * PIDIV180)
+xo1 = Player(1).x + PlayerMember(1).xo * 32
+yo1 = Player(1).y + PlayerMember(1).yo * 32
+xo2 = Player(1).x + PlayerMember(2).xo * 32
+yo2 = Player(1).y + PlayerMember(2).yo * 32
+If Debug = 1 Then
+    Line (ETSX(xo1) - 2, ETSY(yo1) - 2)-(ETSX(xo1) + 2, ETSY(yo1) + 2), _RGB32(255, 0, 255), BF
+    Line (ETSX(xo2) - 2, ETSY(yo2) - 2)-(ETSX(xo2) + 2, ETSY(yo2) + 2), _RGB32(255, 0, 255), BF
+End If
+PlayerMember(1).xo = Player(1).x + PlayerMember(1).xo * 32
+PlayerMember(1).yo = Player(1).y + PlayerMember(1).yo * 32
+PlayerMember(2).xo = Player(1).x + PlayerMember(2).xo * 32
+PlayerMember(2).yo = Player(1).y + PlayerMember(2).yo * 32
+
+RotationDifference = Abs(Player(1).Rotation - PlayerRotOld)
+If RotationDifference > 90 Then RotationDifference = 180 - RotationDifference
+For i = 1 To 2
+
+    Angleadded = PlayerMember(i).angleanim + Player(1).Rotation ' If Angleadded > 180 Then Angleadded = Angleadded - 180
+    PlayerMember(i).xbe = PlayerMember(i).xo + Sin((Angleadded) * PIDIV180) * PlayerMember(i).distanim
+    PlayerMember(i).ybe = PlayerMember(i).yo + -Cos((Angleadded) * PIDIV180) * PlayerMember(i).distanim
+    If Debug = 1 Then Print "Member(" + Str$(i) + "): "; Angleadded
+
+    If Not PlayerMember(i).x = PlayerMember(i).xbe And Not PlayerMember(i).y = PlayerMember(i).ybe Then
+        dx = (PlayerMember(i).x - PlayerMember(i).xbe): dy = (PlayerMember(i).y - PlayerMember(i).ybe)
+        PlayerMember(i).angle = ATan2(dy, dx) ' Angle in radians
+        PlayerMember(i).angle = (PlayerMember(i).angle * 180 / PI) + 90
+        If PlayerMember(i).angle >= 180 Then PlayerMember(i).angle = PlayerMember(i).angle - 179.9
+    End If
+
+    If Int(PlayerMember(i).x) = Int(PlayerMember(i).xbe) And Int(PlayerMember(i).y) = Int(PlayerMember(i).ybe) Then PlayerMember(i).xvector = 0: PlayerMember(i).yvector = 0
+    If Debug = 1 Then Print "MemberRot(" + Str$(i) + "): "; PlayerMember(i).angle
+    PlayerMember(i).xvector = Sin(PlayerMember(i).angle * PIDIV180)
+    PlayerMember(i).yvector = -Cos(PlayerMember(i).angle * PIDIV180)
+    moving2 = moving: If moving2 > 12 Then moving2 = 12
+    If moving2 > 0 Then PlayerMember(i).speed = moving2 / 10 + Distance(PlayerMember(i).x, PlayerMember(i).y, PlayerMember(i).xbe, PlayerMember(i).ybe) / 20
+    'Alterar este codigo, causa bug envolvendo 180 graus.
+    'https://gamedev.stackexchange.com/questions/74986/how-can-i-find-the-difference-between-rotations-represented-as-angles-in-0-360
+    If moving = 0 Then PlayerMember(i).speed = 0.2 + Distance(PlayerMember(i).x, PlayerMember(i).y, PlayerMember(i).xbe, PlayerMember(i).ybe) / 20
+    If moving > 0 Then
+        PlayerMember(i).x = PlayerMember(i).x - Int(Player(1).xm / moving2)
+        PlayerMember(i).y = PlayerMember(i).y - Int(Player(1).ym / moving2)
+    End If
+    ' If Int(PlayerMember(i).y) = Int(PlayerMember(i).ybe) Then PlayerMember(i).y = PlayerMember(i).ybe: PlayerMember(i).speed = 0
+    'If Int(PlayerMember(i).x) = Int(PlayerMember(i).xbe) Then PlayerMember(i).x = PlayerMember(i).xbe: PlayerMember(i).speed = 0
+
+
+    PlayerMember(i).x = PlayerMember(i).x + PlayerMember(i).xvector * PlayerMember(i).speed
+    PlayerMember(i).y = PlayerMember(i).y + PlayerMember(i).yvector * PlayerMember(i).speed
+
+    If Distance(PlayerMember(i).x, PlayerMember(i).y, PlayerMember(i).xbe, PlayerMember(i).ybe) > 100 Then PlayerMember(i).x = Player(1).x: PlayerMember(i).y = Player(1).y
+    '_PutImage (PlayerMember(i).x - 8 - CameraX * Map.TileSize, PlayerMember(i).y - 8 - CameraY * Map.TileSize)-(PlayerMember(i).x + 8 - CameraX * Map.TileSize, PlayerMember(i).y + 8 - CameraY * Map.TileSize), PlayerHand
+    If Debug = 1 Then Line (ETSX(PlayerMember(i).x), ETSY(PlayerMember(i).y))-(ETSX(PlayerMember(i).xbe), ETSY(PlayerMember(i).ybe)), _RGB(0, 0, 0)
+    'Line (ETSX(PlayerMember(i).x), ETSY(PlayerMember(i).y))-(ETSX(PlayerMember(i).x), ETSY(PlayerMember(i).y)), _RGB(255, 255, 255)
+Next
+If Debug = 1 Then Line (ETSX(xo1), ETSY(yo1))-(ETSX(PlayerMember(1).x), ETSY(PlayerMember(1).y)), _RGB32(255, 255, 0)
+If Debug = 1 Then Line (ETSX(xo2), ETSY(yo2))-(ETSX(PlayerMember(2).x), ETSY(PlayerMember(2).y)), _RGB32(255, 255, 0)
+
+Return
+
+
+PlayerMovement:
+Aiming = 0
+If Mouse.click2 Then
+    Aiming = 1
+    If Fix(AimingTime) = 0 Then AimingTime = 15
+    AimingTime = AimingTime * 1.1
+    If AimingTime > 600 Then AimingTime = 600
+    CameraXM = CameraXM + (Sin(GunDisplay(1).rotation * PIDIV180) * (10 + (AimingTime / 20)))
+    CameraYM = CameraYM + (-Cos(GunDisplay(1).rotation * PIDIV180) * (10 + (AimingTime / 20)))
+    Player(1).xm = Player(1).xm / 1.025
+    Player(1).ym = Player(1).ym / 1.025
+Else
+    AimingTime = 0
+End If
+Player(1).xb = Player(1).x
+Player(1).yb = Player(1).y
+PlayerRotOld = Player(1).Rotation
+dx = Int(_Width / 2) - Mouse.x: dy = Int(_Height / 2) - Mouse.y
+Player(1).Rotation = ATan2(dy, dx) ' Angle in radians
+Player(1).Rotation = (Player(1).Rotation * 180 / PI) + 90
+If Debug = 1 Then Print "Player Rotation: "; Player(1).Rotation
+If PlayerIsOnFire > 0 Then
+    PlayerIsOnFire = PlayerIsOnFire - 1
+    If Int(Rnd * 6) = 2 Then
+        Player(1).Health = Player(1).Health - 0.5
+
+        FireLast = FireLast + 1: If FireLast > FireMax Then FireLast = 1
+        Fire(FireLast).visible = 5
+        Fire(FireLast).froozen = 18
+        Fire(FireLast).x = Player(1).x + (Int(Rnd * 30) - 15) * 2
+        Fire(FireLast).y = Player(1).y + (Int(Rnd * 30) - 15) * 2
+        Fire(FireLast).txt = 4
+        Fire(FireLast).xm = (-Player(1).xm) + (Int(Rnd * 30) - 15) * 2
+        Fire(FireLast).ym = (-Player(1).ym) + (Int(Rnd * 30) - 15) * 2
+    End If
+End If
+If Player(1).Rotation > 180 Then Player(1).Rotation = Player(1).Rotation - 180
+If Int(Player(1).Rotation) > -7 And Int(Player(1).Rotation) < 1 And Mouse.y > _Height / 2 Then Player(1).Rotation = 180
+'If Int(Player(1).Rotation) = -2 And Mouse.y > _Height / 2 Then Player(1).Rotation = 180
+movingx = 0: movingy = 0: If ismoving = 0 And moving > 0 Then moving = moving - 1
+If moving > 20 Then moving = 20
+ismoving = 0:
+If Player(1).TouchX = 0 Then
+    If _KeyDown(100) Then Player(1).xm = Player(1).xm - 3: movingx = 1: If ismoving = 0 Then moving = moving + 1: ismoving = 1
+    If _KeyDown(97) Then Player(1).xm = Player(1).xm + 3: movingx = 1: If ismoving = 0 Then moving = moving + 1: ismoving = 1
+End If
+If Player(1).TouchY = 0 Then
+    If _KeyDown(119) Then Player(1).ym = Player(1).ym + 3: movingy = 1: If ismoving = 0 Then moving = moving + 1: ismoving = 1
+    If _KeyDown(115) Then Player(1).ym = Player(1).ym - 3: movingy = 1: If ismoving = 0 Then moving = moving + 1: ismoving = 1
+End If
+If Player(1).TouchX > 0 Then Player(1).TouchX = Player(1).TouchX - 1
+If Player(1).TouchX < 0 Then Player(1).TouchX = Player(1).TouchX + 1
+If Player(1).TouchY > 0 Then Player(1).TouchY = Player(1).TouchY - 1
+If Player(1).TouchY < 0 Then Player(1).TouchY = Player(1).TouchY + 1
+For i = 1 To 5
+    If movingx = 0 Then If Player(1).xm < 0 Then Player(1).xm = Player(1).xm + 1
+    If movingx = 0 Then If Player(1).xm > 0 Then Player(1).xm = Player(1).xm - 1
+    If movingy = 0 Then If Player(1).ym < 0 Then Player(1).ym = Player(1).ym + 1
+    If movingy = 0 Then If Player(1).ym > 0 Then Player(1).ym = Player(1).ym - 1
+Next
+If Player(1).xm < -70 Then Player(1).xm = Player(1).xm + 5
+If Player(1).xm > 70 Then Player(1).xm = Player(1).xm - 5
+If Player(1).ym < -70 Then Player(1).ym = Player(1).ym + 5
+If Player(1).ym > 70 Then Player(1).ym = Player(1).ym - 5
+
+
+Player(1).y = Player(1).y - Player(1).ym / 10: Player(1).x = Player(1).x - Player(1).xm / 10
+MakeHitBoxPlayer Player(1)
+If Noclip = 0 Then If CollisionWithWallsPlayer(Player(1)) Then donebetween = 1
+Return
+
+
+
+RenderSprites:
+rendcamerax1 = Fix(Fix(CameraX * Map.TileSize) / Map.TileSize)
+rendcamerax2 = Fix((Fix(CameraX * Map.TileSize) + _ResizeWidth) / Map.TileSize) + 1
+rendcameray1 = Fix(Fix(CameraY * Map.TileSize) / Map.TileSize)
+rendcameray2 = Fix((Fix(CameraY * Map.TileSize) + _ResizeHeight) / Map.TileSize) + 1
+If rendcamerax1 < 0 Then rendcamerax1 = 0
+If rendcameray1 < 0 Then rendcameray1 = 0
+If rendcamerax2 > Map.MaxWidth Then rendcamerax2 = Map.MaxWidth
+If rendcameray2 > Map.MaxHeight Then rendcameray2 = Map.MaxHeight
+
+For x = rendcamerax1 To rendcamerax2 'Map.MaxWidth
+    For y = rendcameray1 To rendcameray2 'Map.MaxHeight
+        z = 1
+        If RenderLayer1 = 1 Then If Tile(x, y, z).ID <> 0 Then _PutImage (WTS(x, CameraX), WTS(y, CameraY))-(WTS(x, CameraX) + (Map.TileSize * Zoom), WTS(y, CameraY) + (Map.TileSize * Zoom)), Tileset, 0, (Tile(x, y, z).rend_spritex * Map.TextureSize, Tile(x, y, z).rend_spritey * Map.TextureSize)-(Tile(x, y, z).rend_spritex * Map.TextureSize + (Map.TextureSize - 1), Tile(x, y, z).rend_spritey * Map.TextureSize + (Map.TextureSize - 1))
+        z = 2
+        If RenderLayer2 = 1 Then If Tile(x, y, z).ID <> 0 Then _PutImage (WTS(x, CameraX), WTS(y, CameraY))-(WTS(x, CameraX) + (Map.TileSize * Zoom), WTS(y, CameraY) + (Map.TileSize * Zoom)), Tileset, 0, (Tile(x, y, z).rend_spritex * Map.TextureSize, Tile(x, y, z).rend_spritey * Map.TextureSize)-(Tile(x, y, z).rend_spritex * Map.TextureSize + (Map.TextureSize - 1), Tile(x, y, z).rend_spritey * Map.TextureSize + (Map.TextureSize - 1))
+    Next
+Next
+Return
+
+RenderLayer3:
+For x = rendcamerax1 To rendcamerax2 'Map.MaxWidth
+    For y = rendcameray1 To rendcameray2 'Map.MaxHeight
+        z = 3
+        If RenderLayer3 = 1 Then If Tile(x, y, z).ID <> 0 Then _PutImage (WTS(x - 1, CameraX), WTS(y, CameraY))-(WTS(x - 1, CameraX) + (Map.TileSize * Zoom), WTS(y, CameraY) + (Map.TileSize * Zoom)), Tileset, 0, (Tile(x, y, z).rend_spritex * Map.TextureSize, Tile(x, y, z).rend_spritey * Map.TextureSize)-(Tile(x, y, z).rend_spritex * Map.TextureSize + (Map.TextureSize - 1), Tile(x, y, z).rend_spritey * Map.TextureSize + (Map.TextureSize - 1))
+    Next
+Next
+Return
+
+RenderPlayer:
+For P = 1 To PlayerLimit
+    If Debug = 1 Then Line (ETSX(Player(P).x1), ETSY(Player(P).y1))-(ETSX(Player(P).x2), ETSY(Player(P).y2)), _RGB32(P * 120, 255, 255), BF
+    RotoZoom ETSX(Player(P).x), ETSY(Player(P).y), PlayerSprite(PlayerSkin2), 0.25, Player(P).Rotation
+    For i = 1 To 2
+        _PutImage (PlayerMember(i).x - 8 - CameraX * Map.TileSize, PlayerMember(i).y - 8 - CameraY * Map.TileSize)-(PlayerMember(i).x + 8 - CameraX * Map.TileSize, PlayerMember(i).y + 8 - CameraY * Map.TileSize), PlayerHand(PlayerSkin2)
+    Next
+Next
+Return
+
+
+
+
+
+
+
+
+
+
+MenuSystem:
+Do
+    Mouse.x = _MouseX
+    Mouse.y = _MouseY
+    Mouse.click = _MouseButton(1)
+Loop While _MouseInput
+MenuClicking = 0
+If MenuClicking = 0 And Mouse.click = 0 And MenuClickingPre = 1 Then MenuClicking = 1
+MenuClickingPre = -Mouse.click
+If LastToUse < 0 Then LastToUse = 0
+If Mouse.click = 0 Then LastToUse = LastToUse * -1
+If delay > 0 Then delay = delay - 1
+Mouse.x1 = Mouse.x - 1: Mouse.x2 = Mouse.x + 1: Mouse.y1 = Mouse.y - 1: Mouse.y2 = Mouse.y + 1
+DontRepeatFor = 0
+'If ResizeDelay2 > 0 Then ResizeDelay2 = ResizeDelay2 - 1
+'If _Resize Then GoSub ScreenAdjustForSize
+'MenuAnimCode:
+
+For i = 1 To 3
+    If RayM(i).owner = 1 Then
+
+        dx = RayM(i).x - RayM(i).damage: dy = RayM(i).y - RayM(i).knockback
+        rotation = ATan2(dy, dx) ' Angle in radians
+        RayM(i).angle = (rotation * 180 / PI) + 90
+        If RayM(i).angle > 180 Then RayM(i).angle = RayM(i).angle - 179.9
+        xvector = Sin(RayM(i).angle * PIDIV180): yvector = -Cos(RayM(i).angle * PIDIV180)
+
+        RayM(i).x = RayM(i).x + xvector * (1 + (Distance(RayM(i).x, RayM(i).y, RayM(i).damage, RayM(i).knockback) / 5))
+        RayM(i).y = RayM(i).y + yvector * (1 + (Distance(RayM(i).x, RayM(i).y, RayM(i).damage, RayM(i).knockback) / 5))
+    End If
+Next
+
+For i = lasti To 1 Step -1
+    If DontRepeatFor = 1 Or CantClickAnymoreOnHud = 1 Then Exit For
+    If LastToUse > 0 Then DontRepeatFor = 1: i = LastToUse
+    If Menu(i).d_hover > 32 Then Menu(i).d_hover = Menu(i).d_hover - 2
+    If MenuAnim.extra < 29 And UICollide(Mouse, Menu(i)) Or LastToUse > 0 Then
+
+        menx = Int((Menu(i).x1 + Menu(i).x2) / 2)
+        meny = Int((Menu(i).y1 + Menu(i).y2) / 2)
+        dx = menx - Mouse.x
+        dy = meny - Mouse.y
+        rotation = ATan2(dy, dx) ' Angle in radians
+        TempAngle = (rotation * 180 / PI) + 90
+        If TempAngle > 180 Then TempAngle = TempAngle - 179.5
+        Menu(i).OffsetX = Sin(TempAngle * PIDIV180) * (Distance(menx, meny, Mouse.x, Mouse.y) / 17): Menu(i).OffsetY = -Cos(TempAngle * PIDIV180) * (Distance(menx, meny, Mouse.x, Mouse.y) / 17)
+
+
+
+        For o = 1 To 5
+            If Menu(i).d_hover < 32 Then Menu(i).d_hover = Menu(i).d_hover + 1
+        Next
+        DontRepeatFor = 1
+        If Mouse.click = -1 And delay = 0 Then
+            _KeyClear
+            GoSub MenuButtonStyle
+            clicked = i
+        End If
+        If MenuClicking = 1 And Menu(i).clicktogo <> "" Then
+            RayM(1).x = Menu(i).x1 + Menu(i).OffsetX
+            RayM(1).y = Menu(i).y1 + Menu(i).OffsetY
+            RayM(1).damage = 0
+            RayM(1).knockback = 0
+            RayM(1).owner = 1
+            RayM(2).x = Menu(i).x2 + Menu(i).OffsetX
+            RayM(2).y = Menu(i).y2 + Menu(i).OffsetY
+            RayM(2).damage = _Width
+            RayM(2).knockback = _Height
+            RayM(2).owner = 1
+            RayM(3).x = ((Menu(i).x1 + Menu(i).x2) / 2) + Menu(i).OffsetX
+            RayM(3).y = ((Menu(i).y1 + Menu(i).y2) / 2) + Menu(i).OffsetY
+            RayM(3).damage = Fix(_Width / 2)
+            RayM(3).knockback = Fix(_Height / 2)
+            RayM(3).owner = 1
+            MenuClickedID = i
+            MenuTransitionImage = _CopyImage(MenusImages(MenuClickedID))
+            MenuAnim.red = Int(Menu(i).red / 1.03)
+            MenuAnim.green = Int(Menu(i).green / 1.03)
+            MenuAnim.blue = Int(Menu(i).blue / 1.03)
+            MenuAnim.extra = 255
+            CanChangeMenu = 0
+
+            If Menu(i).clicktogo <> "" Then
+                ToLoad$ = Menu(i).clicktogo
+            End If
+        End If
+    End If
+Next
+For i = 1 To lasti
+
+    If Menu(i).style = 3 And Menu(i).d_clicked = 2 Then GoSub InputStyleKeyGet
+Next
+GoSub MenuWhatClicked
+If CanChangeMenu = 0 Then
+    If Loaded$ <> ToLoad$ Then GoSub load
+    CanChangeMenu = 0
+
+
+End If
+
+
+'Drawing Routine:
+For i = 1 To lasti
+    Menu(i).x1 = Menu(i).x1 + Menu(i).OffsetX
+    Menu(i).x2 = Menu(i).x2 + Menu(i).OffsetX
+    Menu(i).y1 = Menu(i).y1 + Menu(i).OffsetY
+    Menu(i).y2 = Menu(i).y2 + Menu(i).OffsetY
+
+    For o = 1 To 3
+        If Menu(i).d_hover < 0 Then Menu(i).d_hover = Menu(i).d_hover + 1
+    Next
+    If Menu(i).d_hover >= 4 Then Menu(i).d_hover = Menu(i).d_hover - 4
+    If Menu(i).text <> "No Draw" Then Line ((Menu(i).x1 - Menu(i).d_hover / 4) - 16, (Menu(i).y1 - Menu(i).d_hover / 4) + 16)-((Menu(i).x2 + Menu(i).d_hover / 4) - 16, (Menu(i).y2 + Menu(i).d_hover / 4) + 16), _RGBA32(0, 0, 0, 100), BF
+Next
+For i = 1 To lasti
+
+
+    If Menu(i).text <> "No Draw" Then Line (Menu(i).x1 - Menu(i).d_hover / 4, Menu(i).y1 - Menu(i).d_hover / 4)-(Menu(i).x2 + Menu(i).d_hover / 4, Menu(i).y2 + Menu(i).d_hover / 4), _RGB32(Menu(i).red, Menu(i).green, Menu(i).blue), BF
+    If Menu(i).style = 1 Then If Menu(i).text <> "W Bh" Then If Menu(i).text <> "No Draw" Or Menu(i).textsize < 2 Then _PutImage ((Menu(i).x1 / 2 + Menu(i).x2 / 2) - _Width(MenusImages(i)) / 2 - Menu(i).d_hover / 4, (Menu(i).y1 / 2 + Menu(i).y2 / 2) - _Height(MenusImages(i)) / 2 - Menu(i).d_hover / 4)-((Menu(i).x1 / 2 + Menu(i).x2 / 2) + _Width(MenusImages(i)) / 2 + Menu(i).d_hover / 4, (Menu(i).y1 / 2 + Menu(i).y2 / 2) + _Height(MenusImages(i)) / 2 + Menu(i).d_hover / 4), MenusImages(i)
+    If Menu(i).style = 2 Then
+        _PutImage ((Menu(i).x1 / 2 + Menu(i).x2 / 2) - _Width(MenusImages(i)) / 2 - Menu(i).d_hover / 4, (Menu(i).y1 / 2 + Menu(i).y2 / 2) - _Height(MenusImages(i)) / 2 - Menu(i).d_hover / 4)-((Menu(i).x1 / 2 + Menu(i).x2 / 2) + _Width(MenusImages(i)) / 2 + Menu(i).d_hover / 4, (Menu(i).y1 / 2 + Menu(i).y2 / 2) + _Height(MenusImages(i)) / 2 + Menu(i).d_hover / 4), MenusImages(i)
+        Line (Menu(i).x1 + CalculatePercentage((Menu(i).x2 - Menu(i).x1), 5) - Menu(i).d_hover / 8, Menu(i).y1 + CalculatePercentage((Menu(i).y2 - Menu(i).y1), 48) - Menu(i).d_hover / 8)-(Menu(i).x2 - CalculatePercentage((Menu(i).x2 - Menu(i).x1), 5) + Menu(i).d_hover / 8, Menu(i).y2 - CalculatePercentage((Menu(i).y2 - Menu(i).y1), 48) + Menu(i).d_hover / 8), _RGBA32(0, 0, 0, 128), BF
+        Line (Menu(i).x1 + Menu(i).visual - CalculatePercentage((Menu(i).x2 - Menu(i).x1), 2), Menu(i).y1 + CalculatePercentage((Menu(i).y2 - Menu(i).y1), 5))-(Menu(i).x1 + Menu(i).visual + CalculatePercentage((Menu(i).x2 - Menu(i).x1), 2), Menu(i).y2 - CalculatePercentage((Menu(i).y2 - Menu(i).y1), 5)), _RGBA32(0, 255, 0, 128), BF
+    End If
+
+    If Menu(i).style = 3 Then If Menu(i).text <> "W Bh" Or Menu(i).text <> "No Draw" Or Menu(i).textsize < 2 Then _PutImage ((Menu(i).x1 / 2 + Menu(i).x2 / 2) - _Width(MenusImages(i)) / 2 - Menu(i).d_hover / 4, (Menu(i).y1 / 2 + Menu(i).y2 / 2) - _Height(MenusImages(i)) / 2 - Menu(i).d_hover / 4)-((Menu(i).x1 / 2 + Menu(i).x2 / 2) + _Width(MenusImages(i)) / 2 + Menu(i).d_hover / 4, (Menu(i).y1 / 2 + Menu(i).y2 / 2) + _Height(MenusImages(i)) / 2 + Menu(i).d_hover / 4), MenusImages(i)
+
+
+    Menu(i).x1 = Menu(i).x1 - Menu(i).OffsetX
+    Menu(i).x2 = Menu(i).x2 - Menu(i).OffsetX
+    Menu(i).y1 = Menu(i).y1 - Menu(i).OffsetY
+    Menu(i).y2 = Menu(i).y2 - Menu(i).OffsetY
+    Menu(i).OffsetX = Menu(i).OffsetX / 1.06
+    Menu(i).OffsetY = Menu(i).OffsetY / 1.06
+Next
+'Loop While CanLeave = 0
+For i = 1 To 32
+    If Menu(i).extra3 <> 0 And Menu(i).d_hover <> 0 Then
+    End If
+Next
+
+If MenuAnim.extra > 0 Then
+
+    MenuAnim.x1 = RayM(1).x
+    MenuAnim.y1 = RayM(1).y
+    MenuAnim.x2 = RayM(2).x
+    MenuAnim.y2 = RayM(2).y
+
+
+    If Fix(MenuAnim.x1) <= 0 Then If Fix(MenuAnim.y1) <= 0 Then RayM(1).owner = 0
+    If Int(MenuAnim.x2) >= _Width Then If Int(MenuAnim.y2) >= _Height Then RayM(2).owner = 0
+
+
+    Line (MenuAnim.x1, MenuAnim.y1)-(MenuAnim.x2, MenuAnim.y2), _RGBA32(MenuAnim.red, MenuAnim.green, MenuAnim.blue, MenuAnim.extra), BF
+    '_SetAlpha Fix(MenuAnim.extra), MenusImages(MenuClickedID)
+    'If Menu(MenuClickedID).text <> "W Bh" Or Menu(MenuClickedID).textsize < 2 Then _PutImage (RayM(3).x - _Width(MenusImages(MenuClickedID)) / 2, RayM(3).y - _Height(MenusImages(MenuClickedID)) / 2)-(RayM(3).x + _Width(MenusImages(MenuClickedID)) / 2, RayM(3).y + _Height(MenusImages(MenuClickedID)) / 2), MenusImages(MenuClickedID)
+    _SetAlpha Fix(MenuAnim.extra), _RGBA32(1, 1, 1, 1) To _RGB32(255, 255, 255, 255), MenuTransitionImage
+
+    If Menu(MenuClickedID).text <> "W Bh" Or Menu(MenuClickedID).textsize < 2 Then _PutImage (RayM(3).x - _Width(MenuTransitionImage) / 2, RayM(3).y - _Height(MenuTransitionImage) / 2)-(RayM(3).x + _Width(MenuTransitionImage) / 2, RayM(3).y + _Height(MenuTransitionImage) / 2), MenuTransitionImage
+
+    If RayM(1).x <= 1 Then
+        If RayM(1).y <= 1 Then
+            If RayM(2).x >= _Width - 1 Then
+                If RayM(2).y >= _Height - 1 Then
+                    RayM(1).x = RayM(1).damage: RayM(2).x = RayM(2).damage
+                    RayM(1).y = RayM(1).knockback: RayM(2).y = RayM(2).knockback
+                    RayM(1).owner = 0: RayM(2).owner = 0: RayM(3).owner = 0
+                    MenuAnim.extra = (MenuAnim.extra / 1.05) - 0.5
+                    CanChangeMenu = 1
+                End If
+            End If
+        End If
+    End If
+
+End If
+'_SetAlpha 255, MenusImages(MenuClickedID)
+_SetAlpha 255, _RGBA32(1, 1, 1, 1) To _RGB32(255, 255, 255, 255), MenuTransitionImage
+Return
+
+ScreenAdjustForSize:
+If ResizeDelay2 = 0 Then
+    Cls
+    Screen SecondScreen
+    _FreeImage MainScreen
+    MainScreen = _NewImage(_ResizeWidth, _ResizeHeight, 32)
+    Screen MainScreen
+    For i = 1 To lasti
+        GoSub redosize
+        GoSub redotexts
+    Next
+    ResizeDelay2 = 80
+End If
+Return
+
+MenuButtonStyle:
+If Menu(i).style = 1 Then
+    LastToUse = i
+    Menu(i).d_hover = 50
+    Menu(i).d_clicked = 1
+End If
+If Menu(i).style = 2 Then
+    LastToUse = i
+    Menu(i).d_hover = 50
+    Menu(i).extra3 = ((Mouse.x - Menu(i).x1) * 100) / (Menu(i).x2 - Menu(i).x1)
+    If Mouse.x < Menu(i).x1 Then Menu(i).extra3 = 0
+    If Mouse.x > Menu(i).x2 Then Menu(i).extra3 = 100
+    Menu(i).visual = CalculatePercentage((Menu(i).x2 - Menu(i).x1), Menu(i).extra3)
+    Menu(i).extra3 = Menu(i).extra3 * (Menu(i).extra2 / 100)
+    Menu(i).text = RTrim$(LTrim$(Str$(Menu(i).extra3)))
+    GoSub redotexts
+End If
+If Menu(i).style = 3 Then
+    Menu(i).d_clicked = 2
+    CantClickAnymoreOnHud = 1
+End If
+Return
+
+InputStyleKeyGet:
+key$ = InKey$
+keyhit = _KeyHit
+If keyhit = 8 Then
+    key$ = ""
+    If Len(Menu(i).text) > 0 Then Menu(i).text = Mid$(Menu(i).text, 0, Len(Menu(i).text))
+    _Dest MainScreen
+    GoSub redotexts
+End If
+If keyhit = 13 Then
+    key$ = ""
+    CantClickAnymoreOnHud = 0: Menu(i).d_clicked = 0: key$ = ""
+    Menu(i).text = LTrim$(RTrim$(Menu(i).text))
+End If
+If key$ <> "" And Len(Menu(i).text) < Menu(i).extra2 Then
+    Menu(i).text = Menu(i).text + key$
+    GoSub redotexts
+End If
+If key$ <> "" And Len(Menu(i).text) >= Menu(i).extra2 Then
+    _NotifyPopup "Begs World", ("Text Limit for this box is " + LTrim$(RTrim$(Str$(Menu(i).extra2)))) + ".", "info"
+End If
+_Dest MainScreen
+Return
+
+MenuWhatClicked:
+webpage$ = "https://www.qb64phoenix.com/"
+If Loaded$ = "menu" Then GoSub Menu
+If Loaded$ = "choosedificulty" Then GoSub Difficulty
+
+For i = 1 To lasti
+    Menu(i).d_clicked = 0
+Next
+Return
+Menu:
+
+_PutImage (0, 0)-(_Width, _Height), Background1
+menx = ((Menu(1).x2 + Menu(1).x1) / 2) + Menu(1).OffsetX
+meny = ((Menu(1).y2 + Menu(1).y1) / 2) + Menu(1).OffsetY
+_PutImage (menx - _Width(VantiroTitulo) / 2, meny - _Height(VantiroTitulo) / 2)-(menx + _Width(VantiroTitulo) / 2, meny + _Height(VantiroTitulo) / 2), VantiroTitulo
+menx = ((Menu(4).x2 + Menu(4).x1) / 2) + Menu(4).OffsetX
+meny = ((Menu(4).y2 + Menu(4).y1) / 2) + Menu(4).OffsetY
+SkinRot = SkinRot / 1.005
+SkinRot = SkinRot + RotateSkinSpeed
+RotateSkinSpeed = RotateSkinSpeed / 1.05
+
+RotoZoom menx, meny, PlayerSprite(PlayerSkin), 0.7, SkinRot
+If Menu(5).d_clicked = 1 Then
+    Beep
+    System
+End If
+If Menu(3).d_clicked = 1 Then
+    quit = 1
+End If
+If Menu(4).d_clicked = 1 And delay = 0 Then
+    delay = 10
+    RotateSkinSpeed = Int(Rnd * 100) - 50
+    _SndPlay PlayerDamage
+End If
+If Menu(6).d_clicked = 1 And delay = 0 Then
+    delay = 20
+    PlayerSkin = PlayerSkin - 1
+    If PlayerSkin < 1 Then PlayerSkin = 1
+    Menu(7).text = ("(" + Str$(PlayerSkin) + "/4)")
+    i = 7
+    GoSub redotexts
+End If
+
+If Menu(8).d_clicked = 1 And delay = 0 Then
+    delay = 20
+    PlayerSkin = PlayerSkin + 1
+    If PlayerSkin > 4 Then PlayerSkin = 4
+    Menu(7).text = ("(" + Str$(PlayerSkin) + "/4)")
+    i = 7
+    GoSub redotexts
+End If
+
+
+Return
+
+Difficulty:
+If Menu(2).d_clicked = 1 Then
+    GameDificulty = 0.5
+    quit = 6
+End If
+
+If Menu(3).d_clicked = 1 Then
+    GameDificulty = 1
+    quit = 6
+End If
+
+If Menu(4).d_clicked = 1 Then
+    GameDificulty = 2
+    quit = 6
+End If
+
+
+Return
+
+
+
+
+RedoSlider:
+Menu(i).visual = (Menu(i).extra3 * 100) / (Menu(i).x2 - Menu(i).x1)
+Menu(i).text = RTrim$(LTrim$(Str$(Menu(i).extra3)))
+GoSub redotexts
+Return
+
+WarningWebsite:
+If Menu(5).d_clicked = 1 Then ToLoad$ = ToLoad2$: GoSub load
+If Menu(6).d_clicked = 1 Then Shell _Hide _DontWait webpage$: ToLoad$ = ToLoad2$: GoSub load
+Return
+PlayerSettings:
+If Menu(17).d_clicked Then
+    username$ = Menu(4).text
+    Open "assets/begs world/settings/PlayerSettings.bhconfig" For Output As #1
+    Print #1, Menu(4).text
+    Close #1
+End If
+Return
+
+
+load:
+If ToLoad$ = "Back$" Then ToLoad$ = ToLoad2$
+_Dest MainScreen
+If Not _FileExists("assets/Vantiro-1.0v/menu/" + RTrim$(LTrim$(ToLoad$)) + ".bhmenu") Then
+    Beep
+    FileMissing$ = ToLoad$
+    FileMissingtype$ = "Menu file"
+    ToLoad$ = "warningfilemissing"
+End If
+Open ("assets/Vantiro-1.0v/menu/" + RTrim$(LTrim$(ToLoad$)) + ".bhmenu") For Input As #1
+Input #1, lasti
+For i = 1 To lasti
+    Input #1, i, Menu(i).x1d, Menu(i).y1d, Menu(i).x2d, Menu(i).y2d, Menu(i).Colors, Menu(i).text, Menu(i).textsize, Menu(i).style, Menu(i).clicktogo, Menu(i).extra, Menu(i).extra2
+    GoSub redosize
+    Menu(i).textsize = Menu(i).y2 - Menu(i).y1
+    Menu(i).red = _Red32(Menu(i).Colors)
+    Menu(i).green = _Green32(Menu(i).Colors)
+    Menu(i).blue = _Blue32(Menu(i).Colors)
+    Menu(i).OffsetX = 0
+    Menu(i).OffsetY = 0
+    GoSub LoadingExtraSignatures
+    If Not Menu(i).text = "W Bh" Then GoSub redotexts
+Next
+Close #1
+delay = 60
+ToLoad2$ = Loaded$
+Loaded$ = ToLoad$
+Mouse.click = 0
+For i = 1 To MenuMax
+    Menu(i).d_clicked = 0
+    Menu(i).d_hover = 0
+Next
+Return
+LoadingExtraSignatures:
+If Menu(i).text = "webpage$" Then Menu(i).text = webpage$
+If Menu(i).text = "$username$" Then Menu(i).text = username$
+If Menu(i).text = "$WhatMissingType$" Then Menu(i).text = (FileMissingtype$ + " Not found!")
+If Menu(i).text = "$WhatMissing$" Then Menu(i).text = (FileMissing$ + " Is missing!")
+
+Return
+
+redotexts:
+If Menu(i).text = "" Then Menu(i).text = " "
+If ImgToMenu <> 0 Then _FreeImage ImgToMenu
+'If MenusImages(i) <> 0 Then _FreeImage MenusImages(i)
+If Menu(i).textsize = -1 Then Menu(i).textsize = Menu(i).y2 - Menu(i).y1
+_Font BegsFontSizes(Menu(i).textsize)
+thx = _PrintWidth(Menu(i).text)
+thy = _FontHeight(BegsFontSizes(Menu(i).textsize))
+ImgToMenu = _NewImage(thx * 3, thy * 3, 32)
+_Dest ImgToMenu
+_ClearColor _RGB32(0, 0, 0): _PrintMode _KeepBackground: _Font BegsFontSizes(Menu(i).textsize - 1): Print Menu(i).text + " "
+If MenusImages(i) <> 0 Then _FreeImage MenusImages(i)
+MenusImages(i) = _NewImage(thx, thy, 32)
+_Dest MainScreen
+_PutImage (0, 0), ImgToMenu, MenusImages(i)
+_Font BegsFontSizes(20)
+Return
+
+redosize:
+Menu(i).x1 = Menu(i).x1d * _Width / 2
+Menu(i).x2 = Menu(i).x2d * _Width / 2
+Menu(i).y1 = Menu(i).y1d * _Height / 2
+Menu(i).y2 = Menu(i).y2d * _Height / 2
+If Menu(i).x1d < 0 Then Menu(i).x1 = Menu(i).x1 * -1
+If Menu(i).x2d < 0 Then Menu(i).x2 = Menu(i).x2 * -1
+If Menu(i).y1d < 0 Then Menu(i).y1 = Menu(i).y1 * -1
+If Menu(i).y2d < 0 Then Menu(i).y2 = Menu(i).y2 * -1
+Return
+
+Sub Explosion (x As Double, y As Double, strength As Double, Size As Double)
+    For o = 1 To 5
+        Part(LastPart).x = x
+        Part(LastPart).y = y
+        Part(LastPart).z = 4
+        Part(LastPart).xm = Int(Rnd * 512) - 256
+        Part(LastPart).ym = Int(Rnd * 512) - 256
+        Part(LastPart).zm = 8 + Int(Rnd * 10)
+        Part(LastPart).froozen = -90
+        Part(LastPart).visible = 30
+        Part(LastPart).partid = "Smoke"
+        Part(LastPart).playwhatsound = "None"
+        Part(LastPart).rotation = Int(Rnd * 360) - 180
+        Part(LastPart).rotationspeed = Int(Rnd * 128) - 64
+        LastPart = LastPart + 1: If LastPart > ParticlesMax Then LastPart = 0
+    Next
+
+    Part(LastPart).x = x
+    Part(LastPart).y = y
+    Part(LastPart).z = 1
+    Part(LastPart).xm = Int(Rnd * 8) - 4
+    Part(LastPart).ym = Int(Rnd * 8) - 4
+    Part(LastPart).zm = 20 + Int(Size / 40)
+    Part(LastPart).froozen = -64
+    Part(LastPart).visible = 5
+    Part(LastPart).partid = "Explosion"
+    Part(LastPart).playwhatsound = "None"
+    Part(LastPart).rotation = Int(Rnd * 360) - 180
+    Part(LastPart).rotationspeed = Int(Rnd * 128) - 64
+    LastPart = LastPart + 1: If LastPart > ParticlesMax Then LastPart = 0
+
+    Part(LastPart).x = x
+    Part(LastPart).y = y
+    Part(LastPart).z = 25
+    Part(LastPart).xm = Int(Rnd * 8) - 4
+    Part(LastPart).ym = Int(Rnd * 8) - 4
+    Part(LastPart).zm = 10
+    Part(LastPart).froozen = -200
+    Part(LastPart).visible = 90
+    Part(LastPart).partid = "Smoke"
+    Part(LastPart).playwhatsound = "None"
+    Part(LastPart).rotation = Int(Rnd * 360) - 180
+    Part(LastPart).rotationspeed = Int(Rnd * 100) - 50
+    LastPart = LastPart + 1: If LastPart > ParticlesMax Then LastPart = 0
+
+
+    For i = 1 To ZombieMax
+        If Zombie(i).health > 0 Then
+            dist = Distance(x, y, Zombie(i).x, Zombie(i).y)
+            If dist < Size Then
+                Zombie(i).DamageTaken = Int(strength / (dist / 50))
+            End If
+        End If
+    Next
+
+
+    dist = Distance(x, y, Player(1).x, Player(1).y)
+    If dist < Size Then
+        'Player(1).DamageToTake = Int(strength / (dist / 30))
+        PlayerTakeDamage Player(1), x, y, Int(strength / (dist / 30)), Int(dist / 10)
+    End If
+
+
+
+End Sub
+
+
+Function raycastingsimple (x As Double, y As Double, angle As Double, limit As Integer)
+
+    Dim xvector As Double: Dim yvector As Double
+    xvector = Sin(angle * PIDIV180): yvector = -Cos(angle * PIDIV180)
+    Ray.x = x: Ray.y = y
+    Do
+        limit = limit - 1
+        Ray.x = Ray.x + xvector * 6: Ray.y = Ray.y + yvector * 6
+        If limit = 0 Then Exit Do
+        tx = Fix((Ray.x) / Map.TileSize): ty = Fix((Ray.y) / Map.TileSize): If Tile(tx, ty, 2).transparent = 0 Then Exit Do
+    Loop While quit < 4
+    raycastingsimple = 1
+End Function
+
+
+
+Function raycasting (x As Double, y As Double, angle As Double, damage As Double, owner As Double)
+    Dim xvector As Double: Dim yvector As Double
+    xvector = Sin(angle * PIDIV180): yvector = -Cos(angle * PIDIV180)
+    Ray.x = x: Ray.y = y: Ray.owner = owner
+    quit = 0
+    Do
+        Steps = Steps + 1
+        steps2 = steps2 + 1
+        Ray.x = Ray.x + xvector * 2: Ray.y = Ray.y + yvector * 2
+        If steps2 = 5 Then
+            tx = Fix((Ray.x) / Map.TileSize): ty = Fix((Ray.y) / Map.TileSize): If Tile(tx, ty, 2).solid = 1 Then
+                quit = quit + 2
+                If Tile(tx, ty, 2).fragile = 1 Then
+                    For o = 1 To 5
+                        Part(LastPart).x = Ray.x
+                        Part(LastPart).y = Ray.y
+                        Part(LastPart).z = 2
+                        Part(LastPart).xm = Int(Rnd * 128) - 64
+                        Part(LastPart).ym = Int(Rnd * 128) - 64
+                        Part(LastPart).zm = 2 + Int(Rnd * 7)
+                        Part(LastPart).froozen = -20
+                        Part(LastPart).visible = 900
+                        Part(LastPart).partid = "GlassShard"
+                        Part(LastPart).playwhatsound = "Glass"
+                        Part(LastPart).rotation = Int(Rnd * 360) - 180
+                        Part(LastPart).rotationspeed = Int(Rnd * 60) - 30
+                        LastPart = LastPart + 1: If LastPart > ParticlesMax Then LastPart = 0
+                    Next
+                    If Tile(tx, ty, 2).ID = 56 Then _SndPlayCopy GlassShadder(Int(1 + Rnd * 3)), 0.4
+                    Tile(tx, ty, 2).ID = 0
+                    Tile(tx, ty, 2).solid = 0
+                    'Tile(tx, ty, 2).rend_spritex = 0
+                    'Tile(tx, ty, 2).rend_spritey = 0
+                End If
+                If Tile(tx, ty, 2).fragile = 0 Then
+                    Part(LastPart).x = Ray.x
+                    Part(LastPart).y = Ray.y
+                    Part(LastPart).z = 2
+                    Part(LastPart).xm = 0
+                    Part(LastPart).ym = 0
+                    Part(LastPart).zm = 2 + Int(Rnd * 3)
+                    Part(LastPart).froozen = -20
+                    Part(LastPart).visible = 800
+                    Part(LastPart).partid = "WallShot"
+                    Part(LastPart).playwhatsound = "Wall"
+                    Part(LastPart).rotation = Int(Rnd * 360) - 180
+                    Part(LastPart).rotationspeed = Int(Rnd * 60) - 30
+                    LastPart = LastPart + 1: If LastPart > ParticlesMax Then LastPart = 0
+                    Exit Do
+                End If
+            End If
+            steps2 = 0
+            For i = 1 To ZombieMax
+                If Zombie(i).active = 1 Then
+                    If RayCollideEntity(Ray, Zombie(i)) Then
+                        If Int(Rnd * 20) = 11 Then _SndPlayCopy ZombieShot(Int(Rnd * 16) + 1), 0.2
+                        If Zombie(i).DamageTaken = 0 Then EntityTakeDamage Zombie(i), Ray.x, Ray.y, damage
+                        changeofblood = Int(Rnd * 30)
+                        If changeofblood < damage + 5 Then SpawnBloodParticle Ray.x, Ray.y, angle, Steps, "green"
+                        If GunDisplay(1).wtype = 2 Then quit = quit + 1: If damage > 0 Then damage = damage - 1
+                        If GunDisplay(1).wtype <> 2 Then quit = 99999
+                    End If
+                End If
+
+            Next
+
+        End If
+    Loop While quit < 7
+
+    For i = 1 To ZombieMax
+        If Zombie(i).active = 1 Then
+            Zombie(i).health = Zombie(i).health - Zombie(i).DamageTaken: Zombie(i).DamageTaken = 0
+        End If
+    Next
+
+End Function
+
+
+
+Sub SpawnBloodParticle (x As Double, y As Double, angle As Double, Steps As Long, BloodType As String)
+    LastPart = LastPart + 1: If LastPart > ParticlesMax Then LastPart = 0
+    Part(LastPart).x = x
+    Part(LastPart).y = y
+    Part(LastPart).z = 2 + Int(Rnd * 12)
+    rand = 20 + Int(Rnd * 100)
+    Part(LastPart).xm = Int(Sin((angle + Int(Rnd * 40) - 20) * PIDIV180) * (rand))
+    Part(LastPart).ym = Int(-Cos((angle + Int(Rnd * 40) - 20) * PIDIV180) * (rand))
+    Part(LastPart).zm = (2 + Int(Rnd * 14))
+    Part(LastPart).froozen = -60
+    Part(LastPart).visible = 2000
+
+    Part(LastPart).BloodColor = BloodType
+    Part(LastPart).partid = "BloodSplat"
+    Part(LastPart).playwhatsound = "Blood"
+    If Part(LastPart).BloodColor = "GibSkull" Then Part(LastPart).partid = BloodType: Part(LastPart).playwhatsound = "Bone"
+    If Part(LastPart).BloodColor = "GibBone" Then Part(LastPart).partid = BloodType: Part(LastPart).playwhatsound = "Bone"
+    If Part(LastPart).BloodColor = "PistolAmmo" Then Part(LastPart).partid = BloodType: Part(LastPart).playwhatsound = "Blood"
+    If Part(LastPart).BloodColor = "ShotgunAmmo" Then Part(LastPart).partid = BloodType: Part(LastPart).playwhatsound = "Blood"
+    If Part(LastPart).BloodColor = "GasAmmo" Then Part(LastPart).partid = BloodType: Part(LastPart).playwhatsound = "Blood"
+    If Part(LastPart).BloodColor = "GrenadeAmmo" Then Part(LastPart).partid = BloodType: Part(LastPart).playwhatsound = "Blood"
+
+    Part(LastPart).rotation = Int(Rnd * 360) - 180
+    Part(LastPart).rotationspeed = Int(Rnd * 60) - 30
+
+End Sub
+
+
+Function Distance (x1, y1, x2, y2)
+    Distance = 0
+    Dist = Sqr(((x1 - x2) ^ 2) + ((y1 - y2) ^ 2))
+    Distance = Dist
+End Function
+Sub PlayerTakeDamage (Player As Player, X, Y, Damage, Knockback)
+    dx = Player.x - X: dy = Player.y - Y
+    Rotation = ATan2(dy, dx) ' Angle in radians
+    Rotation = (Rotation * 180 / PI) + 90
+    If Rotation > 180 Then Rotation = Rotation - 180
+    xvector = Sin(Rotation * PIDIV180)
+    yvector = -Cos(Rotation * PIDIV180)
+    Player.Health = Player.Health - Damage
+    Player.xm = Player.xm / 5
+    Player.ym = Player.ym / 5
+    Player.ym = Int(Player.ym + yvector * (Damage * Knockback))
+    Player.xm = Int(Player.xm + xvector * (Damage * Knockback))
+    SpawnBloodParticle Player.x - Player.size + Int(Rnd * Player.size * 2), Player.y - Player.size + Int(Rnd * Player.size * 2), Rotation + 180, 2, "red"
+    If Player.Health > 0 Then _SndPlay PlayerDamage
+End Sub
+Sub EntityTakeDamage (Player As Entity, X, Y, Damage)
+    dx = Player.x - X: dy = Player.y - Y
+    Rotation = ATan2(dy, dx) ' Angle in radians
+    Rotation = (Rotation * 180 / PI) + 90
+    If Rotation > 180 Then Rotation = Rotation - 180
+    xvector = Sin(Rotation * PIDIV180)
+    yvector = -Cos(Rotation * PIDIV180)
+    Player.ym = Int(Player.ym - ((yvector * (Damage * 35) / Player.weight)))
+    Player.xm = Int(Player.xm - ((xvector * (Damage * 35) / Player.weight)))
+    If (Player.health * 10) < Damage Then gib = 1
+    Player.DamageTaken = Abs(Damage)
+    If gib = 0 And Player.health - Damage < 0 Then Player.health = 0
+End Sub
+
+
+
+Sub MakeHitBoxPlayer (Player As Player)
+    Player.x1 = Player.x - Player.size: Player.x2 = Player.x + Player.size: Player.y1 = Player.y - Player.size: Player.y2 = Player.y + Player.size
+End Sub
+
+Function CollisionWithWallsPlayer (Player As Player)
+    CollisionWithWallsPlayer = 0
+    PY1 = Player.y1 - Player.ym / 10: PY2 = Player.y2 - Player.ym / 10: PX1 = Player.x1 - Player.xm / 10: PX2 = Player.x2 - Player.xm / 10
+    tx1 = Fix((PX1 - 1) / Map.TileSize): ty1 = Fix((PY1 + 10) / Map.TileSize)
+    If Tile(tx1, ty1, 2).solid = 1 Then If Player.xm > 0 Then Player.x = Player.x + Player.xm / 10: Player.xm = -5: Player.TouchX = 3
+    tx1 = Fix((PX1 - 1) / Map.TileSize): ty1 = Fix((PY2 - 10) / Map.TileSize)
+    If Tile(tx1, ty1, 2).solid = 1 Then If Player.xm > 0 Then Player.x = Player.x + Player.xm / 10: Player.xm = -5: Player.TouchX = 3
+    tx1 = Fix((PX2 + 1) / Map.TileSize): ty1 = Fix((PY1 + 10) / Map.TileSize)
+    If Tile(tx1, ty1, 2).solid = 1 Then If Player.xm < 0 Then Player.x = Player.x + Player.xm / 10: Player.xm = 5: Player.TouchX = 3
+    tx1 = Fix((PX2 + 1) / Map.TileSize): ty1 = Fix((PY2 - 10) / Map.TileSize)
+    If Tile(tx1, ty1, 2).solid = 1 Then If Player.xm < 0 Then Player.x = Player.x + Player.xm / 10: Player.xm = 5: Player.TouchX = 3
+    tx1 = Fix((PX1 + 10) / Map.TileSize): ty1 = Fix((PY1 - 1) / Map.TileSize)
+    If Tile(tx1, ty1, 2).solid = 1 Then If Player.ym > 0 Then Player.y = Player.y + Player.ym / 10: Player.ym = -5: Player.TouchY = 3
+    tx1 = Fix((PX1 + 10) / Map.TileSize): ty1 = Fix((PY2 + 1) / Map.TileSize)
+    If Tile(tx1, ty1, 2).solid = 1 Then If Player.ym < 0 Then Player.y = Player.y + Player.ym / 10: Player.ym = 5: Player.TouchY = 3
+    tx1 = Fix((PX2 - 10) / Map.TileSize): ty1 = Fix((PY1 - 1) / Map.TileSize)
+    If Tile(tx1, ty1, 2).solid = 1 Then If Player.ym > 0 Then Player.y = Player.y + Player.ym / 10: Player.ym = -5: Player.TouchY = 3
+    tx1 = Fix((PX2 - 10) / Map.TileSize): ty1 = Fix((PY2 + 1) / Map.TileSize)
+    If Tile(tx1, ty1, 2).solid = 1 Then If Player.ym < 0 Then Player.y = Player.y + Player.ym / 10: Player.ym = 5: Player.TouchY = 3
+    CollisionWithWallsPlayer = -1
+End Function
+
+Function CollisionWithWallsEntity (Player As Entity)
+    CollisionWithWallsEntity = 0
+    PY1 = Player.y1 + Player.ym / 100: PY2 = Player.y2 + Player.ym / 100: PX1 = Player.x1 + Player.xm / 100: PX2 = Player.x2 + Player.xm / 100
+    tx1 = Fix((PX1 - 1) / Map.TileSize): ty1 = Fix((PY1 + 10) / Map.TileSize)
+    If Tile(tx1, ty1, 2).solid = 1 Then If Player.xm < 0 Then Player.x = Player.x - Player.xm / 100: Player.xm = 5
+    tx1 = Fix((PX1 - 1) / Map.TileSize): ty1 = Fix((PY2 - 10) / Map.TileSize)
+    If Tile(tx1, ty1, 2).solid = 1 Then If Player.xm < 0 Then Player.x = Player.x - Player.xm / 100: Player.xm = 5
+    tx1 = Fix((PX2 + 1) / Map.TileSize): ty1 = Fix((PY1 + 10) / Map.TileSize)
+    If Tile(tx1, ty1, 2).solid = 1 Then If Player.xm > 0 Then Player.x = Player.x - Player.xm / 100: Player.xm = -5
+    tx1 = Fix((PX2 + 1) / Map.TileSize): ty1 = Fix((PY2 - 10) / Map.TileSize)
+    If Tile(tx1, ty1, 2).solid = 1 Then If Player.xm > 0 Then Player.x = Player.x - Player.xm / 100: Player.xm = -5
+    tx1 = Fix((PX1 + 10) / Map.TileSize): ty1 = Fix((PY1 - 1) / Map.TileSize)
+    If Tile(tx1, ty1, 2).solid = 1 Then If Player.ym < 0 Then Player.y = Player.y - Player.ym / 100: Player.ym = 5
+    tx1 = Fix((PX1 + 10) / Map.TileSize): ty1 = Fix((PY2 + 1) / Map.TileSize)
+    If Tile(tx1, ty1, 2).solid = 1 Then If Player.ym > 0 Then Player.y = Player.y - Player.ym / 100: Player.ym = -5
+    tx1 = Fix((PX2 - 10) / Map.TileSize): ty1 = Fix((PY1 - 1) / Map.TileSize)
+    If Tile(tx1, ty1, 2).solid = 1 Then If Player.ym < 0 Then Player.y = Player.y - Player.ym / 100: Player.ym = 5
+    tx1 = Fix((PX2 - 10) / Map.TileSize): ty1 = Fix((PY2 + 1) / Map.TileSize)
+    If Tile(tx1, ty1, 2).solid = 1 Then If Player.ym > 0 Then Player.y = Player.y - Player.ym / 100: Player.ym = -5
+    CollisionWithWallsEntity = -1
+End Function
+
+
+
+Sub Angle2Vector (Angle!, xv!, yv!)
+    xv! = Sin(Angle! * PIDIV180)
+    yv! = -Cos(Angle! * PIDIV180)
+End Sub
+
+Function CalculatePercentage (Number As Double, Percentage As Double)
+    Dim Result As Double
+    'Result = (Percentage / 100) * Number
+    Result = (Percentage / Number) * 100
+    CalculatePercentage = Result
+End Function
+Function ATan2 (y As Single, x As Single)
+    Dim AtanResult As Single
+    If x = 0 Then
+        If y > 0 Then
+            AtanResult = PI / 2
+        ElseIf y < 0 Then
+            AtanResult = -PI / 2
+        Else
+            AtanResult = 0
+        End If
+    Else
+        AtanResult = Atn(y / x)
+        If x < 0 Then
+            If y >= 0 Then AtanResult = AtanResult + PI
+        Else AtanResult = AtanResult - PI
+        End If
+    End If
+    ATan2 = AtanResult
+End Function
+
+Function ETSX (e)
+    s = e - CameraX * Map.TileSize
+    ETSX = Int(s)
+End Function
+Function ETSY (e)
+    s = e - CameraY * Map.TileSize
+    ETSY = Int(s)
+End Function
+
+
+Function WTS (w, Camera)
+    s = (w - Camera) * Map.TileSize
+    WTS = Int(s)
+End Function
+
+Function STW (s, m, Camera)
+    w = (s / m) + Camera
+    STW = w
+End Function
+
+Sub RotoZoom (X As Long, Y As Long, Image As Long, Scale As Single, Rotation As Single)
+    Dim px(3) As Single: Dim py(3) As Single
+    W& = _Width(Image&): H& = _Height(Image&)
+    px(0) = -W& / 2: py(0) = -H& / 2: px(1) = -W& / 2: py(1) = H& / 2
+    px(2) = W& / 2: py(2) = H& / 2: px(3) = W& / 2: py(3) = -H& / 2
+    sinr! = Sin(-Rotation / 57.2957795131): cosr! = Cos(-Rotation / 57.2957795131)
+    For i& = 0 To 3
+        x2& = (px(i&) * cosr! + sinr! * py(i&)) * Scale + X: y2& = (py(i&) * cosr! - px(i&) * sinr!) * Scale + Y
+        px(i&) = x2&: py(i&) = y2&
+    Next
+    _MapTriangle (0, 0)-(0, H& - 1)-(W& - 1, H& - 1), Image& To(px(0), py(0))-(px(1), py(1))-(px(2), py(2))
+    _MapTriangle (0, 0)-(W& - 1, 0)-(W& - 1, H& - 1), Image& To(px(0), py(0))-(px(3), py(3))-(px(2), py(2))
+End Sub
+
+Sub FireLogic
+
+End Sub
+
+Function LoadMapSettings (MapName As String)
+    LoadMapSettings = 0
+    Open ("assets/Vantiro-1.0v/maps/" + MapName + ".map") For Input As #1
+    Input #1, trash$ 'Layers header
+    Input #1, Map.Layers
+    Input #1, trash$ 'Max Width for map
+    Input #1, Map.MaxWidth
+    Input #1, trash$ 'Max Height for map
+    Input #1, Map.MaxHeight
+    Input #1, trash$ 'Tile size per tile
+    Input #1, Map.TileSize
+    Input #1, trash$ 'Triggers on the map
+    Input #1, Map.Triggers
+    Input #1, trash$ 'Tile texture size
+    Input #1, Map.TextureSize
+    Input #1, currentlayer
+    'Close #1
+    LoadMapSettings = -1
+    Map.TileSize = Map.TileSize * 4
+End Function
+
+
+Function LoadMap (MapName As String)
+    LoadMap = 0
+    limit = Map.MaxHeight * Map.MaxWidth * Map.Layers
+    For z = 1 To Map.Layers
+        For y = 0 To Map.MaxHeight
+            For x = 0 To Map.MaxWidth
+                ' If x <> Map.MaxWidth Then 'error happens because of the , at each line in the map file. the program interprets the line break as a "" string. please fix
+                Input #1, Tile(x, y, z).ID
+                If Tile(x, y, z).ID = -404 Then NVM = 1
+                If NVM = 1 Then Exit For
+                If z = 2 And Tile(x, y, z).ID <> 0 Then Tile(x, y, z).solid = 1
+                If Tile(x, y, z).ID = 0 Then Tile(x, y, z).transparent = 1
+                IDTOTEXTURE = Tile(x, y, z).ID
+                If Tile(x, y, z).ID = 56 Then Tile(x, y, z).fragile = 1: Tile(x, y, z).transparent = 1
+                Do
+                    If IDTOTEXTURE > 16 Then
+                        Tile(x, y, z).rend_spritey = Tile(x, y, z).rend_spritey + 1
+                        IDTOTEXTURE = IDTOTEXTURE - 16
+                    End If
+                    Tile(x, y, z).rend_spritex = IDTOTEXTURE - 1
+                Loop While IDTOTEXTURE > 16
+            Next
+            If NVM = 1 Then Exit For
+        Next
+        If NVM = 1 Then Exit For
+        If NVM = 0 Then If z <> Map.Layers - 1 Then Input #1, trash$
+    Next
+    Input #1, trash$
+    Input #1, trash$
+    Input #1, trash$
+    Input #1, trash$
+    For r = 1 To Map.Triggers
+        Input #1, Line$
+        poss = InStr(Line$, "name=") + 6
+        endpos = InStr(poss, Line$, Chr$(34))
+        Trigger(r).triggername = Mid$(Line$, poss, endpos - poss)
+
+        poss = InStr(Line$, "x=") + 3
+        endpos = InStr(poss, Line$, Chr$(34))
+        Trigger(r).x1 = Val(Mid$(Line$, poss, endpos - poss)) * 2
+
+        poss = InStr(Line$, "y=") + 3
+        endpos = InStr(poss, Line$, Chr$(34))
+        Trigger(r).y1 = Val(Mid$(Line$, poss, endpos - poss)) * 2
+
+        poss = InStr(Line$, "width=") + 7
+        endpos = InStr(poss, Line$, Chr$(34))
+        Trigger(r).sizex = Val(Mid$(Line$, poss, endpos - poss)) * 2
+
+        poss = InStr(Line$, "height=") + 8
+        endpos = InStr(poss, Line$, Chr$(34))
+        Trigger(r).sizey = Val(Mid$(Line$, poss, endpos - poss)) * 2
+
+        Trigger(r).x2 = Trigger(r).x1 + Trigger(r).sizex
+        Trigger(r).y2 = Trigger(r).y1 + Trigger(r).sizey
+        Input #1, trash$
+
+        Input #1, Line$
+        poss = InStr(Line$, "value=") + 7
+        endpos = InStr(poss, Line$, Chr$(34))
+        Trigger(r).class = Mid$(Line$, poss, endpos - poss)
+
+        Input #1, Line$
+        poss = InStr(Line$, "value=") + 7
+        endpos = InStr(poss, Line$, Chr$(34))
+        Trigger(r).val1 = Val(Mid$(Line$, poss, endpos - poss))
+
+        Input #1, Line$
+        poss = InStr(Line$, "value=") + 7
+        endpos = InStr(poss, Line$, Chr$(34))
+        Trigger(r).val2 = Val(Mid$(Line$, poss, endpos - poss))
+
+        Input #1, Line$
+        poss = InStr(Line$, "value=") + 7
+        endpos = InStr(poss, Line$, Chr$(34))
+        Trigger(r).val3 = Val(Mid$(Line$, poss, endpos - poss))
+
+        Input #1, Line$
+        poss = InStr(Line$, "value=") + 7
+        endpos = InStr(poss, Line$, Chr$(34))
+        Trigger(r).val4 = Val(Mid$(Line$, poss, endpos - poss))
+
+        Input #1, Line$
+        poss = InStr(Line$, "value=") + 7
+        endpos = InStr(poss, Line$, Chr$(34))
+        Trigger(r).needclick = Val(Mid$(Line$, poss, endpos - poss))
+
+        Input #1, Line$
+        poss = InStr(Line$, "value=") + 7
+        endpos = InStr(poss, Line$, Chr$(34))
+        Trigger(r).text = Mid$(Line$, poss, endpos - poss)
+        Input #1, trash$
+        Input #1, trash$
+    Next
+    Close #1
+    LoadMap = -1
+End Function
+
+Function RayCollideEntity (Rect1 As Raycast, rect2 As Entity)
+    RayCollideEntity = 0
+    If Rect1.x >= rect2.x1 Then
+        If Rect1.x <= rect2.x2 Then
+            If Rect1.y >= rect2.y1 Then
+                If Rect1.y <= rect2.y2 Then
+                    RayCollideEntity = -1
+                End If
+            End If
+        End If
+    End If
+End Function
+Function UICollide (Rect1 As Mouse, Rect2 As Menu)
+    UICollide = 0
+    If Rect1.x2 >= Rect2.x1 + Rect2.OffsetX Then
+        If Rect1.x1 <= Rect2.x2 + Rect2.OffsetX Then
+            If Rect1.y2 >= Rect2.y1 + Rect2.OffsetY Then
+                If Rect1.y1 <= Rect2.y2 + Rect2.OffsetY Then
+                    UICollide = -1
+                End If
+            End If
+        End If
+    End If
+End Function
+Function TriggerPlayerCollide (Rect1 As Player, Rect2 As Trigger)
+    TriggerPlayerCollide = 0
+    If Rect1.x2 >= Rect2.x1 Then
+        If Rect1.x1 <= Rect2.x2 Then
+            If Rect1.y2 >= Rect2.y1 Then
+                If Rect1.y1 <= Rect2.y2 Then
+                    TriggerPlayerCollide = -1
+                End If
+            End If
+        End If
+    End If
+End Function
+
