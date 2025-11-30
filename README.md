@@ -6,5 +6,3 @@
 - A new Linux release.
 
 This version has some UI bugs and visual differences due to the changes to images, they will be fixed in the future when I get everything figured out.
-
-Assets from build 1.1v03b. (DELETE "assets/pc/config.ini"!)
