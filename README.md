@@ -8,7 +8,3 @@
 - Better hud.
 - Fixed minor bug with health display.
 - Optimization of code.
-
-This version uses 'Vantiro 1.1v' assets.
-
--=- Always delete Config.ini!
