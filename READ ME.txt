@@ -1,0 +1,32 @@
+# Vantiro 1.2v
+
+# Improvements from previous version (1.1v):
+- Rendering optimization.
+- Balancing changes.
+- New Linux executable.
+- Changed amount of waves to 9.
+- Pistol doesn't need ammo anymore.
+- Game now pauses when pressing ESC, return with SPACE.
+- Fire damage has been increased, while time burning has decreased.
+- Increased aiming distance.
+- Doors now show an interact key indicator.
+
+
+## Controls
+- WASD → Movement.
+- E → Interact.
+- Mouse1 → Shooting.
+- Mouse2 → Aiming.
+- Mouse Scroll → Changing weapons.
+- TAB → Zoom minimap.
+- ESC → Pausing.
+- SPACE (when paused) → Return to game.
+- F3 → Debug/Cheats.
+
+
+## Credits:
+- Bhsdfa (Creator)
+- miojo157 (Some sprites, playtesting)
+- QB64pe's Discord server (Answering code related questions)
+
+
