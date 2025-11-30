@@ -1,0 +1,11 @@
+## Vantiro 1.1v09b
+### Improvements from previous version (1.1v08b):
+
+- New console for debug purposes.
+- Brand new particle system, from scratch.
+- New textures for the cave level, will probably change.
+- Particle tracers are now in the DEBUG mode.
+- New entity AI coming.
+
+
+-# Warning: I didn't track these changes properly, since I stopped posting them.
