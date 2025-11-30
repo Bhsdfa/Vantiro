@@ -7,7 +7,7 @@ Check Branches for versions.
 - **RAM**: 600MB.
 - **CPU**: Pentium Dual-Core.
 - **GPU**: G45 Express Chipset.
-- **OS**: Windows 7 or Linux
+- **OS**: Windows 7 or Linux.
 
 ## **Instalation:**
 1. Download [QB64pe](https://www.qb64phoenix.com/).
