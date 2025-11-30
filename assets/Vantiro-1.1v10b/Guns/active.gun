@@ -1,0 +1,8 @@
+'# This file will be responsable for deciding what guns will be active in game. Include Filenames below:
+Pistol
+Shotgun
+GasCan
+SMG
+Skull
+Zombie
+# End Of File.

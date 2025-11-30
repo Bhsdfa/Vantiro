@@ -1,0 +1,17 @@
+DisplayName="Cave",Weather="0",Tileset="tileset_cave",TextureSize="32",LightMap="0",AmbientLight="20"
+
+TilesProperties:{{{
+ID="4": Fluid, SetFire, DamageOnStep="5"
+ID="3": Health="15"
+ID="5": LightLevel="16", Health="1"
+ID="16": DieToExplosion, Health="1"
+ID="17": Health="1"
+ID="32": Fluid, Water
+ID="33": LightLevel="6"
+ID="34": LightLevel="6"
+ID="35": LightLevel="6"
+ID="36": LightLevel="6"
+ID="37": LightLevel="6"
+
+    }}}
+{EndFile}

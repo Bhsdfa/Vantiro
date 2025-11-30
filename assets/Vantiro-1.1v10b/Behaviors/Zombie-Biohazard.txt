@@ -1,0 +1,8 @@
+Size = %{40} §>5
+Weight = %{15} §>5
+Health = %{50} §>15
+Speed = %{1.5} §<1
+Damage = %{2.6} §>2
+CanBreakBlocks = %{1}
+Smart = %{1}
+CanSpawnWith = ${}

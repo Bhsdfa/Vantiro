@@ -1,0 +1,60 @@
+Terminal commands and syntax:
+BH_TPS; 0..|..65535
+
+EditMob[{%MobID%},{""}]
+    ^ Changes a mobs data, the {""} field can contain:
+    ^   Size, Speed, Health, Damage, BreakBlocks, MaxSpeed, DoKnockback, Smart, DoAI, Collision, Sprite, Class, ClassType, EntName, Group, AIState, TargetX, TargetY
+
+SpawnMob; X, Y, Class, ClassType
+
+SpawnItem; X, Y, Class, ClassType
+
+TeleportEnt; %MobID%, X, Y
+
+Teleport; X, Y
+
+GetMobID[{$MobName$, %PutVar%}]
+    ^ Will allow scripts to collect mobs IDs and store them in variables.
+
+Noclip
+    ^ TOGGLE.
+Freecam
+    ^ TOGGLE.
+
+Stop
+    ^ Stops server if multiplayer, closes client if singleplayer.
+Cheats
+    ^ TOGGLE: Enables/disables cheats in server.
+
+Clear; 'Clears chat.
+
+Reload; (Choice)
+    >Configs
+    >Map
+    >
+
+GameRules; (Choice), (Args per choice)
+    >TileSize,
+    >MaxWidth,
+    >MaxHeight,
+    >Tileset,
+    >CalcLights, 0|1
+    >ParticleLogic, 0|1
+    >MobsLogic, 0|1
+    >ItemLogic, 0|1
+    >TriggerLogic, 0|1
+    >DoMapScripts, 0|1
+    >
+    >
+
+Render; (Choice)
+    >MapLayers,
+    >Mobs,
+    >Particles,
+    >Hands,
+    >Lighting,
+    >Items
+    >Interpolation
+    >Hud
+
+

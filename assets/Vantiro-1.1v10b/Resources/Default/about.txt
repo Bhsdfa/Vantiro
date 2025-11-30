@@ -1,0 +1,3 @@
+Name: "Vantiro Default"
+Desc: "The default way to play"
+Version: "1"
